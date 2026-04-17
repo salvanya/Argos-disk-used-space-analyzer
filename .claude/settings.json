@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(pytest:*)",
+      "Bash(ruff:*)",
+      "Bash(mypy:*)",
+      "Bash(pip:*)",
+      "Bash(uv:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(pnpm:*)",
+      "Bash(vite:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Read(**)",
+      "Write(**)",
+      "Edit(**)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(git rebase:*)",
+      "Bash(rm:*)",
+      "Bash(pip uninstall:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(sudo:*)",
+      "Bash(curl:* | sh)",
+      "Bash(wget:* | sh)"
+    ]
+  },
+  "env": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUNBUFFERED": "1"
+  },
+  "defaultMode": "default",
+  "context": {
+    "alwaysLoad": [
+      "CLAUDE.md"
+    ]
+  }
+}

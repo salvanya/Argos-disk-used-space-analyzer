@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+
+# Local data
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Claude local memory (personal, not shared)
+.claude/memory/current.md
+.claude/memory/archive/
+
+# Keep the memory folder structure discoverable
+!.claude/memory/.gitkeep
+!.claude/memory/decisions/.gitkeep
+!.claude/memory/lessons/.gitkeep
+
+# Build artifacts
+backend/static/
+*.log
