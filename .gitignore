@@ -41,12 +41,7 @@ dist-ssr/
 Thumbs.db
 Desktop.ini
 
-# Claude local memory (personal, not shared)
-.claude/memory/current.md
-.claude/memory/archive/
-
-# Keep the memory folder structure discoverable
-!.claude/memory/.gitkeep
+# Claude memory fully tracked — sync session state across devices
 !.claude/memory/decisions/.gitkeep
 !.claude/memory/lessons/.gitkeep
 
