@@ -5,6 +5,7 @@ All settings are optional with sensible defaults. Prefix: ``ARGOS_``.
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Literal
 
 from pydantic import field_validator
@@ -33,7 +34,11 @@ class Settings(BaseSettings):
         if not v:
             raise ValueError("host must not be empty")
         if v == "0.0.0.0":
-            raise ValueError(
-                "Binding to 0.0.0.0 is not allowed. Argos binds to 127.0.0.1 only."
-            )
+            raise ValueError("Binding to 0.0.0.0 is not allowed. Argos binds to 127.0.0.1 only.")
         return v
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    """Return the singleton Settings instance (reads env vars once)."""
+    return Settings()

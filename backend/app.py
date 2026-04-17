@@ -12,6 +12,10 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from backend.api.health import router as health_router
+from backend.api.scan import router as scan_router
+from backend.api.scan import ws_router
+from backend.config import Settings
+from backend.core.cache import ScanCache
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +31,10 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application instance."""
+    # Read settings fresh on each call so tests using different ARGOS_* env vars
+    # each get their own isolated configuration.
+    settings = Settings()
+
     app = FastAPI(
         title="Argos",
         description="Local-first disk space visualizer",
@@ -36,12 +44,17 @@ def create_app() -> FastAPI:
         lifespan=_lifespan,
     )
 
-    # Per-launch auth token stored in app state.
-    # The health route is exempt; all other /api routes require this token.
+    # Per-launch auth token — set before any request is handled.
     app.state.auth_token = secrets.token_urlsafe(32)
+
+    # Cache initialised eagerly so fixtures and request handlers can access it
+    # via app.state.cache immediately, without waiting for the ASGI lifespan.
+    app.state.cache = ScanCache(Path(settings.cache_db))
 
     # API routes
     app.include_router(health_router, prefix="/api")
+    app.include_router(scan_router, prefix="/api")
+    app.include_router(ws_router)
 
     # Serve built frontend if available (production mode)
     if _STATIC_DIR.is_dir() and (_STATIC_DIR / "index.html").exists():

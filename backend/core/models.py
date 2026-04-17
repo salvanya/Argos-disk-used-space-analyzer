@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -42,3 +43,46 @@ class ScanResult(BaseModel):
     total_folders: int  # count of NodeType.folder nodes (includes root)
     total_size: int  # == root.size
     error_count: int  # number of nodes with accessible=False
+
+
+# ---------------------------------------------------------------------------
+# API request / response models
+# ---------------------------------------------------------------------------
+
+
+class ScanStartRequest(BaseModel):
+    root: str  # absolute path; will be coerced to Path in the endpoint
+    options: ScanOptions = ScanOptions()
+    force_rescan: bool = False
+
+
+class ScanSummary(BaseModel):
+    """Flat summary returned by GET /api/scans (no tree blob)."""
+
+    root_path: str
+    scanned_at: datetime
+    total_files: int
+    total_folders: int
+    total_size: int
+    error_count: int
+    duration_seconds: float
+
+
+# ---------------------------------------------------------------------------
+# WebSocket message envelope — discriminated union on the `type` field
+# ---------------------------------------------------------------------------
+
+
+class WsProgressMessage(BaseModel):
+    type: Literal["progress"] = "progress"
+    node_count: int
+
+
+class WsCompleteMessage(BaseModel):
+    type: Literal["complete"] = "complete"
+    result: ScanResult
+
+
+class WsErrorMessage(BaseModel):
+    type: Literal["error"] = "error"
+    message: str
