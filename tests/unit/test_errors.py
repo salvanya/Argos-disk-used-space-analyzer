@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from backend.core.errors import (
     ArgosError,
     AuthError,
