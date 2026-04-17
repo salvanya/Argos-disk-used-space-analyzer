@@ -126,9 +126,7 @@ def test_scan_result_total_folders_count(
 # ---------------------------------------------------------------------------
 
 
-def test_scan_symlink_file_excluded_from_parent_size(
-    tmp_path: Path, scanner: DiskScanner
-) -> None:
+def test_scan_symlink_file_excluded_from_parent_size(tmp_path: Path, scanner: DiskScanner) -> None:
     target = tmp_path / "big_file.bin"
     target.write_bytes(b"x" * 500)
     link = tmp_path / "link_to_big.bin"
@@ -286,9 +284,7 @@ def test_scan_exclude_system_files_by_default(tmp_path: Path, scanner: DiskScann
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows FILE_ATTRIBUTE_SYSTEM only")
-def test_scan_include_system_files_when_option_set(
-    tmp_path: Path, scanner: DiskScanner
-) -> None:
+def test_scan_include_system_files_when_option_set(tmp_path: Path, scanner: DiskScanner) -> None:
     visible = tmp_path / "visible.txt"
     visible.write_bytes(b"x" * 10)
     sys_file = tmp_path / "sys_file.txt"

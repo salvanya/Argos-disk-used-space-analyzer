@@ -61,9 +61,7 @@ def test_get_returns_none_when_cache_empty(cache: ScanCache) -> None:
     assert cache.get(Path("/nonexistent/path")) is None
 
 
-def test_put_then_get_returns_equivalent_result(
-    cache: ScanCache, tmp_path: Path
-) -> None:
+def test_put_then_get_returns_equivalent_result(cache: ScanCache, tmp_path: Path) -> None:
     root = tmp_path / "mydir"
     result = _make_result(root.as_posix(), size=100)
     cache.put(result)
@@ -143,9 +141,7 @@ def test_delete_then_get_returns_none(cache: ScanCache, tmp_path: Path) -> None:
     assert cache.get(root) is None
 
 
-def test_delete_nonexistent_does_not_raise(
-    cache: ScanCache, tmp_path: Path
-) -> None:
+def test_delete_nonexistent_does_not_raise(cache: ScanCache, tmp_path: Path) -> None:
     # Should be a no-op, not an error
     cache.delete(tmp_path / "ghost")
 
@@ -159,9 +155,7 @@ def test_list_roots_empty_when_no_scans(cache: ScanCache) -> None:
     assert cache.list_roots() == []
 
 
-def test_list_roots_returns_all_stored_roots(
-    cache: ScanCache, tmp_path: Path
-) -> None:
+def test_list_roots_returns_all_stored_roots(cache: ScanCache, tmp_path: Path) -> None:
     paths = [tmp_path / f"dir_{i}" for i in range(3)]
     for p in paths:
         cache.put(_make_result(p.as_posix()))
@@ -172,9 +166,7 @@ def test_list_roots_returns_all_stored_roots(
         assert p.as_posix() in stored_paths
 
 
-def test_list_roots_returns_path_and_datetime(
-    cache: ScanCache, tmp_path: Path
-) -> None:
+def test_list_roots_returns_path_and_datetime(cache: ScanCache, tmp_path: Path) -> None:
     root = tmp_path / "mydir"
     cache.put(_make_result(root.as_posix()))
     roots = cache.list_roots()

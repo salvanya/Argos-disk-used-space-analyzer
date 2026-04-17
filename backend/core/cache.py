@@ -123,10 +123,7 @@ class ScanCache:
         except sqlite3.Error as exc:
             raise CacheError(f"Failed to list cached scans: {exc}") from exc
 
-        return [
-            (row[0], datetime.fromisoformat(row[1]).replace(tzinfo=UTC))
-            for row in rows
-        ]
+        return [(row[0], datetime.fromisoformat(row[1]).replace(tzinfo=UTC)) for row in rows]
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -141,4 +138,6 @@ class ScanCache:
                 conn.executescript(_DDL)
                 conn.commit()
         except sqlite3.Error as exc:
-            raise CacheError(f"Failed to initialise cache database at {self._db_path}: {exc}") from exc
+            raise CacheError(
+                f"Failed to initialise cache database at {self._db_path}: {exc}"
+            ) from exc
