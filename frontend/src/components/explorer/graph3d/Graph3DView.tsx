@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ForceGraph3D from "react-force-graph-3d";
+import { Box } from "lucide-react";
+import { EmptyState } from "../../ui/EmptyState";
 import { useScanStore } from "../../../stores/scanStore";
 import { useExplorerStore } from "../../../stores/explorerStore";
 import { useAppStore } from "../../../stores/appStore";
@@ -34,8 +36,8 @@ export function Graph3DView() {
 
   if (!result || !data) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-fg-muted">
-        {t("graph3d.emptyState")}
+      <div className="flex h-full items-center justify-center">
+        <EmptyState icon={Box} headline={t("graph3d.emptyState")} />
       </div>
     );
   }

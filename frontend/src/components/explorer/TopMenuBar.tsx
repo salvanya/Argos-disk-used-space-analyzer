@@ -22,17 +22,21 @@ function MenuButton({
   onClick,
   disabled = false,
   active = false,
+  toggle = false,
   children,
 }: {
   label: string;
   onClick: () => void;
   disabled?: boolean;
   active?: boolean;
+  toggle?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <button
       aria-label={label}
+      aria-pressed={toggle ? active : undefined}
+      title={label}
       onClick={onClick}
       disabled={disabled}
       className={[
@@ -92,7 +96,10 @@ export function TopMenuBar() {
   }
 
   return (
-    <div className="flex items-center gap-1 border-b border-canvas-border px-4 py-2">
+    <nav
+      aria-label={t("explorer.a11y.topMenu")}
+      className="flex items-center gap-1 border-b border-canvas-border px-4 py-2"
+    >
       {/* Left group */}
       <MenuButton label={t("explorer.back")} onClick={handleBack}>
         <ArrowLeft size={14} />
@@ -116,6 +123,7 @@ export function TopMenuBar() {
         label={t("explorer.toggleHidden")}
         onClick={toggleHidden}
         active={showHidden}
+        toggle
       >
         {showHidden ? <Eye size={14} /> : <EyeOff size={14} />}
       </MenuButton>
@@ -124,6 +132,7 @@ export function TopMenuBar() {
         label={t("explorer.toggleSymlinks")}
         onClick={toggleSymlinks}
         active={followSymlinks}
+        toggle
       >
         <Link size={14} />
       </MenuButton>
@@ -158,6 +167,6 @@ export function TopMenuBar() {
       <MenuButton label={t("explorer.toggleTheme")} onClick={handleTheme}>
         {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
       </MenuButton>
-    </div>
+    </nav>
   );
 }

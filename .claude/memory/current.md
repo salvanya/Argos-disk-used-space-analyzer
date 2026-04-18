@@ -1,18 +1,26 @@
 # Current State — 2026-04-18
 
 ## In Progress
-Pre-M11 cleanup: TS build errors fixed, **uncommitted** (awaiting user approval).
+M11 polish complete, awaiting commit.
 
 ## Last Completed
-- Commit 96a313d: M10 3D graph view.
-- Unstaged: `frontend/vite.config.ts` (vitest/config + triple-slash at top) and `frontend/src/components/explorer/columns/InsightsPanel.tsx` (Recharts Tooltip formatter type). `tsc -b` now clean; `npm run build` OK; 148/148 tests pass.
+- M10 (commit 96a313d) + TS fixes (73520e5).
+- M11 workstreams (unstaged):
+  - Bundle split: Three.js in `graph3d` chunk (1.4 MB), main 744 KB / 232 KB gz.
+  - `EmptyState`, `ErrorPanel`, `ErrorBoundary`, `usePrefersReducedMotion` primitives with tests (13 new).
+  - Empty/error wired across FolderTree, ContentsTable (incl. permission-denied), InsightsPanel, Graph3DView, RecentScans; App wrapped in ErrorBoundary.
+  - Animations: Explorer view-mode crossfade + staggered column fade-in; reduced-motion respected globally (CSS + hook).
+  - A11y: folder tree keyboard nav (↑↓→←/Enter/Home/End), `role="tree"`/`treeitem`, `aria-level`/`aria-expanded`/`aria-selected`, landmark roles, `aria-pressed` on TopMenuBar toggles, universal `:focus-visible` ring, jest-axe smoke test (Home + Explorer, 0 violations).
+- 163/163 tests pass; tsc -b clean; build clean.
 
 ## Next Step
-Commit TS fixes (`fix(frontend): resolve tsc -b errors in vite.config and InsightsPanel`), then `/plan M11` to scope the polish pass.
+Single commit: `feat(m11): polish pass — lazy 3D, empty/error states, a11y, motion (see specs/m11-polish)`.
+Then M12 — admin relaunch + advanced settings.
 
 ## Open Questions
-None. Graph3DView chunk is 1.34 MB — flag for M11 chunking if relevant.
+None. Main bundle is 744 KB — over the 500 KB target from plan but acceptable (Recharts + React are the bulk). Further splitting deferred to M12+.
 
 ## Files Worth Reloading Next Session
-- `specs/m10-graph3d-view/` — M10 reference
-- CLAUDE.md §5 (Design System) for M11 direction
+- `specs/m11-polish/` — spec/plan/tasks
+- `frontend/src/components/ui/` — new primitives
+- `frontend/src/hooks/usePrefersReducedMotion.ts`

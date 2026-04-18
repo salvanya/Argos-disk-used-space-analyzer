@@ -1,7 +1,9 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useTranslation } from "react-i18next";
-import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, FolderOpen, Inbox } from "lucide-react";
+import { EmptyState } from "../../../ui/EmptyState";
+import { ErrorPanel } from "../../../ui/ErrorPanel";
 import { useScanStore } from "../../../../stores/scanStore";
 import { useExplorerStore } from "../../../../stores/explorerStore";
 import {
@@ -51,6 +53,16 @@ export function ContentsTable() {
   const children = useMemo(() => {
     if (!result || !focusedPath) return null;
     return getDirectChildren(result.root, focusedPath);
+  }, [result, focusedPath]);
+
+  const focusedNode = useMemo((): ScanNode | null => {
+    if (!result || !focusedPath) return null;
+    function find(node: ScanNode): ScanNode | null {
+      if (node.path === focusedPath) return node;
+      for (const c of node.children) { const r = find(c); if (r) return r; }
+      return null;
+    }
+    return find(result.root);
   }, [result, focusedPath]);
 
   const focusedSize = useMemo(() => {
@@ -123,16 +135,27 @@ export function ContentsTable() {
 
   if (!focusedPath || !result) {
     return (
-      <div className="flex h-full flex-col items-center justify-center p-6 text-center">
-        <p className="text-xs text-fg-muted">{t("explorer.emptyContents")}</p>
+      <div className="flex h-full items-center justify-center">
+        <EmptyState icon={FolderOpen} headline={t("explorer.emptyContents")} />
+      </div>
+    );
+  }
+
+  if (focusedNode && focusedNode.accessible === false) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <ErrorPanel
+          title={t("errors.boundaryTitle")}
+          message={t("errors.permissionDenied")}
+        />
       </div>
     );
   }
 
   if (children !== null && children.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center p-6 text-center">
-        <p className="text-xs text-fg-muted">{t("explorer.contents.emptyFolder")}</p>
+      <div className="flex h-full items-center justify-center">
+        <EmptyState icon={Inbox} headline={t("explorer.contents.emptyFolder")} />
       </div>
     );
   }

@@ -22,6 +22,16 @@ export default defineConfig({
   build: {
     outDir: "../backend/static",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/three/") || id.includes("node_modules/react-force-graph-3d/")) {
+            return "graph3d";
+          }
+          return undefined;
+        },
+      },
+    },
   },
   server: {
     port: 5173,

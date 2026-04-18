@@ -1,8 +1,24 @@
 import "@testing-library/jest-dom";
+import { toHaveNoViolations } from "jest-axe";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
 import * as React from "react";
+
+expect.extend(toHaveNoViolations);
+
+if (typeof globalThis.matchMedia === "undefined") {
+  globalThis.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof matchMedia;
+}
 
 void i18n.use(initReactI18next).init({
   lng: "en",

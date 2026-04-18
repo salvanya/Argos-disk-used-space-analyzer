@@ -1,5 +1,6 @@
-import { Clock, HardDrive } from "lucide-react";
+import { Clock, HardDrive, FolderSearch } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { EmptyState } from "../ui/EmptyState";
 import type { ScanSummary } from "../../lib/types";
 
 interface RecentScansProps {
@@ -29,7 +30,11 @@ export function RecentScans({ scans, onOpen }: RecentScansProps) {
 
   if (scans.length === 0) {
     return (
-      <p className="text-xs text-fg-muted">{t("home.noRecentScans")}</p>
+      <EmptyState
+        icon={FolderSearch}
+        headline={t("home.emptyRecent.headline")}
+        subtext={t("home.emptyRecent.subtext")}
+      />
     );
   }
 

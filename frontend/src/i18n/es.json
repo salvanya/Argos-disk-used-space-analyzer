@@ -3,6 +3,15 @@
     "name": "Argos",
     "tagline": "Visualizador de espacio en disco"
   },
+  "common": {
+    "loading": "Cargando…"
+  },
+  "errors": {
+    "boundaryTitle": "Algo salió mal",
+    "boundaryMessage": "La vista falló inesperadamente. Intenta de nuevo o recarga la página.",
+    "retry": "Reintentar",
+    "permissionDenied": "Esta carpeta no es accesible. Puede requerir privilegios elevados."
+  },
   "admin": {
     "elevated": "Ejecutando como administrador",
     "standard": "Usuario estándar"
@@ -20,7 +29,11 @@
     "recentScans": "Análisis recientes",
     "noRecentScans": "Aún no hay análisis recientes.",
     "openRecent": "Abrir",
-    "scanError": "Error en el análisis: {{message}}"
+    "scanError": "Error en el análisis: {{message}}",
+    "emptyRecent": {
+      "headline": "Sin análisis recientes",
+      "subtext": "Elige una carpeta arriba para comenzar."
+    }
   },
   "explorer": {
     "back": "Volver",
@@ -37,6 +50,12 @@
     "emptyFolders": "El árbol de carpetas aparecerá aquí tras el análisis.",
     "emptyContents": "Selecciona una carpeta para ver su contenido.",
     "emptyInsights": "Los gráficos y estadísticas aparecerán aquí.",
+    "a11y": {
+      "tree": "Árbol de carpetas",
+      "contents": "Contenido de la carpeta",
+      "insights": "Panel de estadísticas",
+      "topMenu": "Controles del explorador"
+    },
     "insights": {
       "noData": "Selecciona una carpeta para ver estadísticas.",
       "summary": "Resumen",

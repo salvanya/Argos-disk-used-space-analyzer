@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AuroraBackground } from "./components/layout/AuroraBackground";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import "./i18n";
 import { fetchConfig, fetchSystemInfo, setToken } from "./lib/api";
 import { Home } from "./pages/Home";
@@ -35,10 +36,12 @@ function AppBootstrap() {
   return (
     <>
       <AuroraBackground />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/explorer" element={<Explorer />} />
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/explorer" element={<Explorer />} />
+        </Routes>
+      </ErrorBoundary>
     </>
   );
 }

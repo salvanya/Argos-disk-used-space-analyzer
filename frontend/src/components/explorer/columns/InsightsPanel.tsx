@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { BarChart2, Folder, FileText } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { EmptyState } from "../../ui/EmptyState";
 import { useExplorerStore } from "../../../stores/explorerStore";
 import { useScanStore } from "../../../stores/scanStore";
 import { getDirectChildren } from "./contents/contentsUtils";
@@ -24,11 +25,14 @@ export function InsightsPanel() {
 
   if (!children || children.length === 0) {
     return (
-      <div className="glass flex h-full flex-col overflow-hidden">
+      <div
+        className="glass flex h-full flex-col overflow-hidden"
+        role="complementary"
+        aria-label={t("explorer.a11y.insights")}
+      >
         <PanelHeader />
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
-          <BarChart2 size={28} className="text-fg-muted" />
-          <p className="text-xs text-fg-muted">{t("explorer.insights.noData")}</p>
+        <div className="flex flex-1 items-center justify-center">
+          <EmptyState icon={BarChart2} headline={t("explorer.insights.noData")} />
         </div>
       </div>
     );
@@ -40,7 +44,11 @@ export function InsightsPanel() {
   const breakdown = getTypeBreakdown(children);
 
   return (
-    <div className="glass flex h-full flex-col overflow-hidden">
+    <div
+      className="glass flex h-full flex-col overflow-hidden"
+      role="complementary"
+      aria-label={t("explorer.a11y.insights")}
+    >
       <PanelHeader />
       <div className="flex-1 overflow-y-auto p-4 space-y-5 scrollbar-thin">
         <SummaryStats stats={stats} />

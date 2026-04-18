@@ -3,6 +3,15 @@
     "name": "Argos",
     "tagline": "Disk space visualizer"
   },
+  "common": {
+    "loading": "Loading…"
+  },
+  "errors": {
+    "boundaryTitle": "Something went wrong",
+    "boundaryMessage": "The view crashed unexpectedly. Try again, or reload the page.",
+    "retry": "Try again",
+    "permissionDenied": "This folder is inaccessible. Elevated privileges may be required."
+  },
   "admin": {
     "elevated": "Running as administrator",
     "standard": "Standard user"
@@ -20,7 +29,11 @@
     "recentScans": "Recent scans",
     "noRecentScans": "No recent scans yet.",
     "openRecent": "Open",
-    "scanError": "Scan failed: {{message}}"
+    "scanError": "Scan failed: {{message}}",
+    "emptyRecent": {
+      "headline": "No recent scans yet",
+      "subtext": "Pick a folder above to get started."
+    }
   },
   "explorer": {
     "back": "Back",
@@ -37,6 +50,12 @@
     "emptyFolders": "Folder tree will appear here after scan.",
     "emptyContents": "Select a folder to see its contents.",
     "emptyInsights": "Charts and insights will appear here.",
+    "a11y": {
+      "tree": "Folder tree",
+      "contents": "Folder contents",
+      "insights": "Insights panel",
+      "topMenu": "Explorer controls"
+    },
     "insights": {
       "noData": "Select a folder to see insights.",
       "summary": "Summary",
