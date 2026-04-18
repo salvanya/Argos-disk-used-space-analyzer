@@ -1,26 +1,20 @@
 # Current State — 2026-04-18
 
 ## In Progress
-M11 polish complete, awaiting commit.
+None. M11 shipped.
 
 ## Last Completed
-- M10 (commit 96a313d) + TS fixes (73520e5).
-- M11 workstreams (unstaged):
-  - Bundle split: Three.js in `graph3d` chunk (1.4 MB), main 744 KB / 232 KB gz.
-  - `EmptyState`, `ErrorPanel`, `ErrorBoundary`, `usePrefersReducedMotion` primitives with tests (13 new).
-  - Empty/error wired across FolderTree, ContentsTable (incl. permission-denied), InsightsPanel, Graph3DView, RecentScans; App wrapped in ErrorBoundary.
-  - Animations: Explorer view-mode crossfade + staggered column fade-in; reduced-motion respected globally (CSS + hook).
-  - A11y: folder tree keyboard nav (↑↓→←/Enter/Home/End), `role="tree"`/`treeitem`, `aria-level`/`aria-expanded`/`aria-selected`, landmark roles, `aria-pressed` on TopMenuBar toggles, universal `:focus-visible` ring, jest-axe smoke test (Home + Explorer, 0 violations).
-- 163/163 tests pass; tsc -b clean; build clean.
+- Commit 71760e0 `feat(m11): polish pass — lazy 3D, empty/error states, a11y, motion`.
+- 163/163 tests pass; tsc -b clean; vite build clean.
+- Bundle: Three.js split into `graph3d` chunk (1.4 MB / 381 KB gz); main `index` 744 KB / 232 KB gz.
 
 ## Next Step
-Single commit: `feat(m11): polish pass — lazy 3D, empty/error states, a11y, motion (see specs/m11-polish)`.
-Then M12 — admin relaunch + advanced settings.
+Start M12 — admin relaunch flow + advanced settings (CLAUDE.md §10). Recommended entry: `/spec M12` to scope.
 
 ## Open Questions
-None. Main bundle is 744 KB — over the 500 KB target from plan but acceptable (Recharts + React are the bulk). Further splitting deferred to M12+.
+- Main bundle is 744 KB, above the 500 KB stretch target in M11 plan. Recharts is the main offender. Decide in M12+ whether to lazy-load InsightsPanel too.
 
 ## Files Worth Reloading Next Session
-- `specs/m11-polish/` — spec/plan/tasks
-- `frontend/src/components/ui/` — new primitives
-- `frontend/src/hooks/usePrefersReducedMotion.ts`
+- `specs/m11-polish/` — finished reference
+- `backend/core/windows_utils.py` — M12 will touch admin detection + UAC elevation
+- CLAUDE.md §6.6 (admin privileges) and §10 (milestones)
