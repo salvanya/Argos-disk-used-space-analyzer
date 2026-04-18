@@ -36,7 +36,26 @@
     "insightsPanel": "Insights",
     "emptyFolders": "Folder tree will appear here after scan.",
     "emptyContents": "Select a folder to see its contents.",
-    "emptyInsights": "Charts and insights will appear here."
+    "emptyInsights": "Charts and insights will appear here.",
+    "contents": {
+      "emptyFolder": "This folder is empty.",
+      "colName": "Name",
+      "colSize": "Size",
+      "noGrouping": "No grouping",
+      "groupByType": "Group by type",
+      "copyPath": "Copy path",
+      "pathCopied": "Path copied!",
+      "properties": "Properties",
+      "openInExplorer": "Open in Explorer",
+      "delete": "Delete",
+      "propertiesTitle": "Properties",
+      "propPath": "Path",
+      "propSize": "Size",
+      "propType": "Type",
+      "propAccessible": "Accessible",
+      "propIsLink": "Symlink",
+      "close": "Close"
+    }
   },
   "units": {
     "files": "{{count}} files",

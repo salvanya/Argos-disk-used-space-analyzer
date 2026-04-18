@@ -36,7 +36,26 @@
     "insightsPanel": "Análisis",
     "emptyFolders": "El árbol de carpetas aparecerá aquí tras el análisis.",
     "emptyContents": "Selecciona una carpeta para ver su contenido.",
-    "emptyInsights": "Los gráficos y estadísticas aparecerán aquí."
+    "emptyInsights": "Los gráficos y estadísticas aparecerán aquí.",
+    "contents": {
+      "emptyFolder": "Esta carpeta está vacía.",
+      "colName": "Nombre",
+      "colSize": "Tamaño",
+      "noGrouping": "Sin agrupación",
+      "groupByType": "Agrupar por tipo",
+      "copyPath": "Copiar ruta",
+      "pathCopied": "¡Ruta copiada!",
+      "properties": "Propiedades",
+      "openInExplorer": "Abrir en Explorador",
+      "delete": "Eliminar",
+      "propertiesTitle": "Propiedades",
+      "propPath": "Ruta",
+      "propSize": "Tamaño",
+      "propType": "Tipo",
+      "propAccessible": "Accesible",
+      "propIsLink": "Enlace simbólico",
+      "close": "Cerrar"
+    }
   },
   "units": {
     "files": "{{count}} archivos",
