@@ -15,6 +15,8 @@ import {
 import { ContentsRow } from "./ContentsRow";
 import { ContextMenu } from "./ContextMenu";
 import { PropertiesModal } from "./PropertiesModal";
+import { DeleteConfirmModal } from "./DeleteConfirmModal";
+import { openInExplorer, deleteItem } from "../../../../lib/api";
 import type { ScanNode } from "../../../../lib/types";
 import { cn } from "../../../../lib/utils";
 
@@ -41,6 +43,8 @@ export function ContentsTable() {
   const [groupMode, setGroupMode] = useState<GroupMode>("none");
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [propertiesNode, setPropertiesNode] = useState<ScanNode | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ScanNode | null>(null);
+  const removeNode = useScanStore((s) => s.removeNode);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -96,6 +100,26 @@ export function ContentsTable() {
   const handleCopyPath = useCallback(() => {
     if (contextMenu) void navigator.clipboard.writeText(contextMenu.node.path);
   }, [contextMenu]);
+
+  const handleOpenInExplorer = useCallback(() => {
+    if (!contextMenu) return;
+    void openInExplorer(contextMenu.node.path);
+  }, [contextMenu]);
+
+  const handleDeleteConfirm = useCallback(
+    async (permanent: boolean) => {
+      if (!deleteTarget) return;
+      try {
+        await deleteItem(deleteTarget.path, permanent);
+        removeNode(deleteTarget.path);
+      } catch {
+        // error is surfaced to user via future toast system; for now silently ignore
+      } finally {
+        setDeleteTarget(null);
+      }
+    },
+    [deleteTarget, removeNode],
+  );
 
   if (!focusedPath || !result) {
     return (
@@ -189,6 +213,8 @@ export function ContentsTable() {
           onClose={() => setContextMenu(null)}
           onCopyPath={handleCopyPath}
           onProperties={() => setPropertiesNode(contextMenu.node)}
+          onOpenInExplorer={handleOpenInExplorer}
+          onDelete={() => setDeleteTarget(contextMenu.node)}
         />
       )}
 
@@ -196,6 +222,14 @@ export function ContentsTable() {
         <PropertiesModal
           node={propertiesNode}
           onClose={() => setPropertiesNode(null)}
+        />
+      )}
+
+      {deleteTarget && (
+        <DeleteConfirmModal
+          name={deleteTarget.name}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={(permanent) => void handleDeleteConfirm(permanent)}
         />
       )}
     </div>

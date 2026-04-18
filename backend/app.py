@@ -11,6 +11,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from backend.api.filesystem import router as filesystem_router
 from backend.api.health import router as health_router
 from backend.api.scan import router as scan_router
 from backend.api.scan import ws_router
@@ -59,6 +60,7 @@ def create_app() -> FastAPI:
     app.include_router(ws_router)
     app.include_router(system_router, prefix="/api")
     app.include_router(system_authed_router, prefix="/api")
+    app.include_router(filesystem_router, prefix="/api")
 
     # Serve built frontend if available (production mode)
     if _STATIC_DIR.is_dir() and (_STATIC_DIR / "index.html").exists():

@@ -68,7 +68,16 @@
       "propType": "Type",
       "propAccessible": "Accessible",
       "propIsLink": "Symlink",
-      "close": "Close"
+      "close": "Close",
+      "deleteConfirm": {
+        "title": "Delete item?",
+        "recycleBinDesc": "This item will be moved to the Recycle Bin.",
+        "permanentDesc": "This item will be permanently deleted.",
+        "permanentLabel": "Delete permanently",
+        "cannotBeUndone": "This cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      }
     }
   },
   "units": {

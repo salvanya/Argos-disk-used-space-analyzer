@@ -7,6 +7,7 @@ sensible defaults (False / 0) when Windows-specific APIs are unavailable.
 from __future__ import annotations
 
 import ctypes
+import subprocess
 import sys
 from pathlib import Path
 
@@ -16,6 +17,7 @@ __all__ = [
     "is_hidden",
     "is_link",
     "is_system_file",
+    "open_in_explorer",
 ]
 
 # Windows file-attribute flag constants
@@ -79,6 +81,17 @@ def is_hidden(path: Path) -> bool:
     This avoids unreachable-branch warnings while remaining cross-platform safe.
     """
     return bool(get_file_attributes(path) & _FILE_ATTRIBUTE_HIDDEN)
+
+
+def open_in_explorer(path: Path) -> None:
+    """Open *path* in Windows Explorer with the item selected.
+
+    Calls ``explorer.exe /select,<path>`` on Windows; does nothing on other platforms.
+    Raises ``OSError`` if the subprocess cannot be launched.
+    """
+    if sys.platform != "win32":  # pragma: no cover
+        return  # pragma: no cover
+    subprocess.Popen(["explorer.exe", f"/select,{path}"])
 
 
 def is_system_file(path: Path) -> bool:

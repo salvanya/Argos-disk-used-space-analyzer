@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import ctypes
+import subprocess
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
-from backend.core.windows_utils import is_admin, is_hidden, is_link, is_system_file
+from backend.core.windows_utils import is_admin, is_hidden, is_link, is_system_file, open_in_explorer
 
 # ---------------------------------------------------------------------------
 # is_link
@@ -96,3 +98,24 @@ def test_is_system_file_returns_true_for_system_file(tmp_path: Path) -> None:
     file_attribute_system = 0x4
     ctypes.windll.kernel32.SetFileAttributesW(str(f), file_attribute_system)  # type: ignore[attr-defined]
     assert is_system_file(f) is True
+
+
+# ---------------------------------------------------------------------------
+# open_in_explorer
+# ---------------------------------------------------------------------------
+
+
+def test_open_in_explorer_calls_subprocess_on_windows(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys, "platform", "win32")
+    mock_popen: MagicMock = MagicMock()
+    with patch("backend.core.windows_utils.subprocess") as mock_sub:
+        mock_sub.Popen = mock_popen
+        open_in_explorer(tmp_path)
+    mock_popen.assert_called_once_with(["explorer.exe", f"/select,{tmp_path}"])
+
+
+def test_open_in_explorer_does_nothing_on_non_windows(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys, "platform", "linux")
+    with patch("backend.core.windows_utils.subprocess") as mock_sub:
+        open_in_explorer(tmp_path)
+    mock_sub.Popen.assert_not_called()

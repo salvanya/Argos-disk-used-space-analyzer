@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ScanResult } from "../lib/types";
+import type { ScanNode, ScanResult } from "../lib/types";
 
 type ScanStatus = "idle" | "scanning" | "done" | "error";
 
@@ -15,6 +15,16 @@ interface ScanState {
   completeScan: (result: ScanResult) => void;
   failScan: (message: string) => void;
   reset: () => void;
+  removeNode: (path: string) => void;
+}
+
+function removeNodeFromTree(node: ScanNode, path: string): ScanNode {
+  return {
+    ...node,
+    children: node.children
+      .filter((c) => c.path !== path)
+      .map((c) => removeNodeFromTree(c, path)),
+  };
 }
 
 export const useScanStore = create<ScanState>((set) => ({
@@ -29,4 +39,14 @@ export const useScanStore = create<ScanState>((set) => ({
   completeScan: (result) => set({ status: "done", result }),
   failScan: (message) => set({ status: "error", errorMessage: message }),
   reset: () => set({ status: "idle", selectedPath: "", nodeCount: 0, result: null, errorMessage: "" }),
+  removeNode: (path) =>
+    set((state) => {
+      if (!state.result) return state;
+      return {
+        result: {
+          ...state.result,
+          root: removeNodeFromTree(state.result.root, path),
+        },
+      };
+    }),
 }));

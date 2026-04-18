@@ -38,6 +38,38 @@ export async function listScans(): Promise<ScanSummary[]> {
   return get<ScanSummary[]>("/api/scans");
 }
 
+async function del(path: string, body: unknown): Promise<void> {
+  const resp = await fetch(path, {
+    method: "DELETE",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const detail = await resp.json().then((j: { detail?: string }) => j.detail ?? resp.statusText).catch(() => resp.statusText);
+    throw new Error(detail);
+  }
+}
+
+async function post(path: string, body: unknown): Promise<void> {
+  const resp = await fetch(path, {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const detail = await resp.json().then((j: { detail?: string }) => j.detail ?? resp.statusText).catch(() => resp.statusText);
+    throw new Error(detail);
+  }
+}
+
+export async function openInExplorer(path: string): Promise<void> {
+  return post("/api/fs/open", { path });
+}
+
+export async function deleteItem(path: string, permanent: boolean): Promise<void> {
+  return del("/api/fs/item", { path, permanent, confirm: true });
+}
+
 export function connectScanWs(
   token: string,
   root: string,

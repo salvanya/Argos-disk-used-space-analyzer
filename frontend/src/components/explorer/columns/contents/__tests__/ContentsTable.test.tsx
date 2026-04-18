@@ -238,18 +238,27 @@ describe("ContentsTable", () => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith("/root/report.pdf");
     });
 
-    it("Open in Explorer menu item is present but disabled", () => {
+    it("Open in Explorer menu item is present and enabled", () => {
       renderWithFile();
       fireEvent.contextMenu(screen.getByTestId("contents-row-/root/report.pdf"));
       const item = screen.getByRole("menuitem", { name: /openinexplorer/i });
-      expect(item).toBeDisabled();
+      expect(item).not.toBeDisabled();
     });
 
-    it("Delete menu item is present but disabled", () => {
+    it("Delete menu item is present and enabled", () => {
       renderWithFile();
       fireEvent.contextMenu(screen.getByTestId("contents-row-/root/report.pdf"));
-      const item = screen.getByRole("menuitem", { name: /delete/i });
-      expect(item).toBeDisabled();
+      const item = screen.getByRole("menuitem", { name: /^explorer\.contents\.delete$/i });
+      expect(item).not.toBeDisabled();
+    });
+
+    it("clicking Delete opens the confirmation modal", () => {
+      renderWithFile();
+      fireEvent.contextMenu(screen.getByTestId("contents-row-/root/report.pdf"));
+      fireEvent.click(screen.getByRole("menuitem", { name: /^explorer\.contents\.delete$/i }));
+      const dialog = screen.getByRole("dialog");
+      expect(dialog).toBeInTheDocument();
+      expect(within(dialog).getByText("report.pdf")).toBeInTheDocument();
     });
   });
 

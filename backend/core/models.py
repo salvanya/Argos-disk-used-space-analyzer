@@ -104,3 +104,18 @@ class SystemInfo(BaseModel):
 
 class FolderPickerResponse(BaseModel):
     path: str | None
+
+
+# ---------------------------------------------------------------------------
+# Filesystem operation request models
+# ---------------------------------------------------------------------------
+
+
+class OpenRequest(BaseModel):
+    path: str
+
+
+class DeleteRequest(BaseModel):
+    path: str
+    permanent: bool = False
+    confirm: bool

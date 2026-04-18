@@ -68,7 +68,16 @@
       "propType": "Tipo",
       "propAccessible": "Accesible",
       "propIsLink": "Enlace simbólico",
-      "close": "Cerrar"
+      "close": "Cerrar",
+      "deleteConfirm": {
+        "title": "¿Eliminar elemento?",
+        "recycleBinDesc": "Este elemento se moverá a la Papelera de reciclaje.",
+        "permanentDesc": "Este elemento se eliminará de forma permanente.",
+        "permanentLabel": "Eliminar permanentemente",
+        "cannotBeUndone": "Esto no se puede deshacer.",
+        "cancel": "Cancelar",
+        "confirm": "Eliminar"
+      }
     }
   },
   "units": {

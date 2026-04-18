@@ -10,9 +10,11 @@ interface ContextMenuProps {
   onClose: () => void;
   onCopyPath: () => void;
   onProperties: () => void;
+  onOpenInExplorer: () => void;
+  onDelete: () => void;
 }
 
-export function ContextMenu({ x, y, node: _node, onClose, onCopyPath, onProperties }: ContextMenuProps) {
+export function ContextMenu({ x, y, node: _node, onClose, onCopyPath, onProperties, onOpenInExplorer, onDelete }: ContextMenuProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -64,15 +66,15 @@ export function ContextMenu({ x, y, node: _node, onClose, onCopyPath, onProperti
       <div className="my-1 border-t border-white/10" />
       <button
         role="menuitem"
-        disabled
-        className="flex w-full items-center px-3 py-1.5 text-left text-sm text-white/30 cursor-not-allowed"
+        className="flex w-full items-center px-3 py-1.5 text-left text-sm text-white/80 hover:bg-white/10"
+        onClick={() => { onOpenInExplorer(); onClose(); }}
       >
         {t("explorer.contents.openInExplorer")}
       </button>
       <button
         role="menuitem"
-        disabled
-        className="flex w-full items-center px-3 py-1.5 text-left text-sm text-red-400/30 cursor-not-allowed"
+        className="flex w-full items-center px-3 py-1.5 text-left text-sm text-red-400 hover:bg-red-500/10"
+        onClick={() => { onDelete(); onClose(); }}
       >
         {t("explorer.contents.delete")}
       </button>
