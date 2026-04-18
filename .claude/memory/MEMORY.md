@@ -7,6 +7,8 @@
 - [0004: No-auth config bootstrap](decisions/0004-no-auth-config-bootstrap.md) — App config (token) fetched once on mount, not baked into HTML
 
 ## Lessons
+- [rtl i18n key regex](lessons/rtl-i18n-key-regex.md) — Regexes with spaces (e.g. /copy path/i) won't match camelCase i18n keys; use /copypath/i
+- [sort toggle null initial](lessons/sort-toggle-null-initial.md) — Init sortKey as null so first click activates (not toggles); pre-set value causes toggle on first click
 - [tanstack-virtual jsdom](lessons/tanstack-virtual-jsdom.md) — useVirtualizer renders nothing in jsdom; mock it in tests
 - [lucide-react icon existence](lessons/lucide-react-icon-existence.md) — Verify icon names exist before using; lucide renames icons across versions
 - [vitest i18next setup](lessons/vitest-i18next-setup.md) — i18next must be initialized in test-setup.ts; keys render verbatim in tests
