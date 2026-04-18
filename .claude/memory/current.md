@@ -1,18 +1,18 @@
 # Current State — 2026-04-18
 
 ## In Progress
-Nothing — M10 complete and committed (96a313d).
+Pre-M11 cleanup: TS build errors fixed, **uncommitted** (awaiting user approval).
 
 ## Last Completed
-- Commit 96a313d: M10 3D graph view — react-force-graph-3d + three, lazy-loaded chunk, graph3d/ module with log-scaled radii + theme palette, view-mode branching in Explorer.tsx, downsample at 5000 nodes, EN/ES i18n. 148 frontend tests, 93 backend tests.
+- Commit 96a313d: M10 3D graph view.
+- Unstaged: `frontend/vite.config.ts` (vitest/config + triple-slash at top) and `frontend/src/components/explorer/columns/InsightsPanel.tsx` (Recharts Tooltip formatter type). `tsc -b` now clean; `npm run build` OK; 148/148 tests pass.
 
 ## Next Step
-Start **M11 — Polish** (animations, empty states, error states, accessibility pass).
-Run `/plan M11` first.
+Commit TS fixes (`fix(frontend): resolve tsc -b errors in vite.config and InsightsPanel`), then `/plan M11` to scope the polish pass.
 
 ## Open Questions
-- Pre-existing build errors in `frontend/src/components/explorer/columns/InsightsPanel.tsx` (Recharts Formatter type) and `frontend/vite.config.ts` (`test` field typed against UserConfigExport). `vite build` succeeds alone; only `tsc -b` fails. Consider fixing as part of M11 polish or separately.
+None. Graph3DView chunk is 1.34 MB — flag for M11 chunking if relevant.
 
 ## Files Worth Reloading Next Session
-- `specs/m10-graph3d-view/` — just-completed spec for reference
-- CLAUDE.md §5 (Design System) for M11 polish direction
+- `specs/m10-graph3d-view/` — M10 reference
+- CLAUDE.md §5 (Design System) for M11 direction
