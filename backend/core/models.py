@@ -86,3 +86,21 @@ class WsCompleteMessage(BaseModel):
 class WsErrorMessage(BaseModel):
     type: Literal["error"] = "error"
     message: str
+
+
+# ---------------------------------------------------------------------------
+# System / config models
+# ---------------------------------------------------------------------------
+
+
+class AppConfig(BaseModel):
+    token: str
+
+
+class SystemInfo(BaseModel):
+    is_admin: bool
+    platform: str
+
+
+class FolderPickerResponse(BaseModel):
+    path: str | None

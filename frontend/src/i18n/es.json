@@ -1,0 +1,30 @@
+{
+  "app": {
+    "name": "Argos",
+    "tagline": "Visualizador de espacio en disco"
+  },
+  "admin": {
+    "elevated": "Ejecutando como administrador",
+    "standard": "Usuario estándar"
+  },
+  "home": {
+    "title": "¿Dónde miramos?",
+    "subtitle": "Selecciona una carpeta para analizar su uso de disco.",
+    "chooseFolder": "Elegir carpeta",
+    "noFolderSelected": "Ninguna carpeta seleccionada",
+    "scan": "Analizar",
+    "scanning": "Analizando…",
+    "itemsFound": "{{count}} elementos encontrados…",
+    "scanComplete": "Análisis completo",
+    "viewResults": "Ver resultados",
+    "recentScans": "Análisis recientes",
+    "noRecentScans": "Aún no hay análisis recientes.",
+    "openRecent": "Abrir",
+    "scanError": "Error en el análisis: {{message}}"
+  },
+  "units": {
+    "files": "{{count}} archivos",
+    "folders": "{{count}} carpetas",
+    "scannedAt": "Analizado el {{date}}"
+  }
+}

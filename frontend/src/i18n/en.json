@@ -1,0 +1,30 @@
+{
+  "app": {
+    "name": "Argos",
+    "tagline": "Disk space visualizer"
+  },
+  "admin": {
+    "elevated": "Running as administrator",
+    "standard": "Standard user"
+  },
+  "home": {
+    "title": "Where should we look?",
+    "subtitle": "Select a folder to analyze its disk usage.",
+    "chooseFolder": "Choose folder",
+    "noFolderSelected": "No folder selected",
+    "scan": "Scan",
+    "scanning": "Scanning…",
+    "itemsFound": "{{count}} items found…",
+    "scanComplete": "Scan complete",
+    "viewResults": "View results",
+    "recentScans": "Recent scans",
+    "noRecentScans": "No recent scans yet.",
+    "openRecent": "Open",
+    "scanError": "Scan failed: {{message}}"
+  },
+  "units": {
+    "files": "{{count}} files",
+    "folders": "{{count}} folders",
+    "scannedAt": "Scanned {{date}}"
+  }
+}
