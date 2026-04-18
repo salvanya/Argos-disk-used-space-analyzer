@@ -23,8 +23,8 @@ export function TreeRow({ item, isFocused, onToggle, onFocus }: TreeRowProps) {
       className={cn(
         "group flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-sm transition-colors",
         isFocused
-          ? "bg-white/10 text-white"
-          : "text-white/70 hover:bg-white/5 hover:text-white",
+          ? "bg-canvas-selected text-fg-primary"
+          : "text-fg-secondary hover:bg-canvas-hover hover:text-fg-primary",
         isLocked && "opacity-40"
       )}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
@@ -34,7 +34,7 @@ export function TreeRow({ item, isFocused, onToggle, onFocus }: TreeRowProps) {
         <button
           data-chevron
           aria-label={isExpanded ? "collapse" : "expand"}
-          className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-white/40 transition-transform hover:text-white/80"
+          className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-fg-muted transition-transform hover:text-fg-secondary"
           style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
           onClick={(e) => {
             e.stopPropagation();
@@ -50,20 +50,20 @@ export function TreeRow({ item, isFocused, onToggle, onFocus }: TreeRowProps) {
       {isLink ? (
         <Link data-icon="link" size={14} className="shrink-0 text-cyan-400/70" />
       ) : isLocked ? (
-        <Lock data-icon="lock" size={14} className="shrink-0 text-white/30" />
+        <Lock data-icon="lock" size={14} className="shrink-0 text-fg-muted" />
       ) : (
         <Folder size={14} className="shrink-0 text-blue-400/70" />
       )}
 
       <span className="min-w-0 flex-1 truncate font-medium">{node.name}</span>
 
-      <span className="shrink-0 font-mono text-xs text-white/40">
+      <span className="shrink-0 font-mono text-xs text-fg-muted">
         {formatSize(node.size)}
       </span>
       <span
         className={cn(
           "w-10 shrink-0 text-right font-mono text-xs",
-          isFocused ? "text-white/60" : "text-white/30"
+          isFocused ? "text-fg-secondary" : "text-fg-muted"
         )}
       >
         {computePct(node.size, parentSize)}

@@ -40,7 +40,7 @@ function MenuButton({
         "disabled:cursor-not-allowed disabled:opacity-30",
         active
           ? "bg-accent-blue/20 text-accent-blue"
-          : "text-white/60 hover:bg-white/10 hover:text-white/90",
+          : "text-fg-secondary hover:bg-canvas-hover hover:text-fg-primary",
       ].join(" ")}
     >
       {children}
@@ -92,13 +92,13 @@ export function TopMenuBar() {
   }
 
   return (
-    <div className="flex items-center gap-1 border-b border-white/10 px-4 py-2">
+    <div className="flex items-center gap-1 border-b border-canvas-border px-4 py-2">
       {/* Left group */}
       <MenuButton label={t("explorer.back")} onClick={handleBack}>
         <ArrowLeft size={14} />
       </MenuButton>
 
-      <div className="mx-2 h-4 w-px bg-white/15" />
+      <div className="mx-2 h-4 w-px bg-canvas-border" />
 
       {/* Scan controls */}
       <MenuButton
@@ -128,7 +128,7 @@ export function TopMenuBar() {
         <Link size={14} />
       </MenuButton>
 
-      <div className="mx-2 h-4 w-px bg-white/15" />
+      <div className="mx-2 h-4 w-px bg-canvas-border" />
 
       {/* View mode */}
       <MenuButton
@@ -147,7 +147,7 @@ export function TopMenuBar() {
         <Box size={14} />
       </MenuButton>
 
-      <div className="mx-2 h-4 w-px bg-white/15" />
+      <div className="mx-2 h-4 w-px bg-canvas-border" />
 
       {/* Locale + theme */}
       <MenuButton label={t("explorer.toggleLanguage")} onClick={handleLocale}>

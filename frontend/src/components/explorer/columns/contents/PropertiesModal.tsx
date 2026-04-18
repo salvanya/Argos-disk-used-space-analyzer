@@ -28,21 +28,21 @@ export function PropertiesModal({ node, onClose }: PropertiesModalProps) {
         aria-modal="true"
         className="glass w-full max-w-md rounded-2xl p-6 shadow-2xl"
       >
-        <h2 className="mb-4 text-sm font-semibold text-white/80">
+        <h2 className="mb-4 text-sm font-semibold text-fg-primary">
           {t("explorer.contents.propertiesTitle")}
         </h2>
         <table className="w-full text-xs">
           <tbody>
             {rows.map(([label, value]) => (
-              <tr key={label} className="border-b border-white/5">
-                <td className="py-1.5 pr-4 text-white/40">{label}</td>
-                <td className="py-1.5 font-mono text-white/80 break-all">{value}</td>
+              <tr key={label} className="border-b border-canvas-border">
+                <td className="py-1.5 pr-4 text-fg-muted">{label}</td>
+                <td className="py-1.5 font-mono text-fg-primary break-all">{value}</td>
               </tr>
             ))}
           </tbody>
         </table>
         <button
-          className="mt-4 rounded-lg bg-white/10 px-4 py-1.5 text-xs text-white/70 hover:bg-white/15"
+          className="mt-4 rounded-lg bg-canvas-hover px-4 py-1.5 text-xs text-fg-secondary hover:bg-canvas-selected"
           onClick={onClose}
         >
           {t("explorer.contents.close")}

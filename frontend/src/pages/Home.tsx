@@ -64,10 +64,10 @@ export function Home() {
         >
           {/* Hero card */}
           <div className="glass p-8">
-            <h1 className="text-2xl font-semibold tracking-tight text-white/90">
+            <h1 className="text-2xl font-semibold tracking-tight text-fg-primary">
               {t("home.title")}
             </h1>
-            <p className="mt-1 text-sm text-white/40">{t("home.subtitle")}</p>
+            <p className="mt-1 text-sm text-fg-secondary">{t("home.subtitle")}</p>
 
             <div className="mt-6 flex flex-col gap-4">
               <FolderPicker />
@@ -86,7 +86,7 @@ export function Home() {
 
           {/* Recent scans */}
           <div className="mt-6">
-            <p className="mb-3 text-xs font-medium uppercase tracking-widest text-white/25">
+            <p className="mb-3 text-xs font-medium uppercase tracking-widest text-fg-muted">
               {t("home.recentScans")}
             </p>
             <RecentScans scans={recentScans} onOpen={handleOpenRecent} />

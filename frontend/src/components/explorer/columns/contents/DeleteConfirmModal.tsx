@@ -17,21 +17,21 @@ export function DeleteConfirmModal({ name, onClose, onConfirm }: DeleteConfirmMo
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
     >
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#1a1a1f]/95 p-6 shadow-2xl backdrop-blur-xl">
-        <h2 className="mb-1 text-sm font-semibold text-white/90">
+      <div className="w-full max-w-sm rounded-2xl border border-canvas-border bg-canvas-modal p-6 shadow-2xl backdrop-blur-xl">
+        <h2 className="mb-1 text-sm font-semibold text-fg-primary">
           {t("explorer.contents.deleteConfirm.title")}
         </h2>
-        <p className="mb-2 truncate rounded bg-white/5 px-2 py-1 font-mono text-xs text-white/70">
+        <p className="mb-2 truncate rounded bg-canvas-hover px-2 py-1 font-mono text-xs text-fg-secondary">
           {name}
         </p>
 
-        <p className="mb-4 text-xs text-white/50">
+        <p className="mb-4 text-xs text-fg-secondary">
           {permanent
             ? t("explorer.contents.deleteConfirm.permanentDesc")
             : t("explorer.contents.deleteConfirm.recycleBinDesc")}
         </p>
 
-        <label className="mb-4 flex cursor-pointer items-center gap-2 text-xs text-white/60">
+        <label className="mb-4 flex cursor-pointer items-center gap-2 text-xs text-fg-secondary">
           <input
             type="checkbox"
             checked={permanent}
@@ -49,7 +49,7 @@ export function DeleteConfirmModal({ name, onClose, onConfirm }: DeleteConfirmMo
 
         <div className="flex justify-end gap-2">
           <button
-            className="rounded-lg px-4 py-1.5 text-xs text-white/50 hover:bg-white/8 hover:text-white/80"
+            className="rounded-lg px-4 py-1.5 text-xs text-fg-secondary hover:bg-canvas-hover hover:text-fg-primary"
             onClick={onClose}
           >
             {t("explorer.contents.deleteConfirm.cancel")}

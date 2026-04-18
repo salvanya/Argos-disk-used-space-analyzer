@@ -26,16 +26,16 @@ export function FolderTreePanel() {
 
   return (
     <div className="glass flex h-full flex-col overflow-hidden">
-      <div className="border-b border-white/10 px-4 py-3">
-        <span className="text-xs font-semibold uppercase tracking-widest text-white/40">
+      <div className="border-b border-canvas-border px-4 py-3">
+        <span className="text-xs font-semibold uppercase tracking-widest text-fg-muted">
           {t("explorer.foldersPanel")}
         </span>
       </div>
 
       {!result ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
-          <FolderOpen size={28} className="text-white/15" />
-          <p className="text-xs text-white/30">{t("explorer.emptyFolders")}</p>
+          <FolderOpen size={28} className="text-fg-muted" />
+          <p className="text-xs text-fg-muted">{t("explorer.emptyFolders")}</p>
         </div>
       ) : (
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-2">

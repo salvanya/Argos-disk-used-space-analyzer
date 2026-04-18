@@ -22,7 +22,7 @@ export function ScanProgress() {
         {status === "scanning" && (
           <>
             <span className="h-2 w-2 animate-pulse rounded-full bg-accent-blue" />
-            <span className="text-white/70">
+            <span className="text-fg-secondary">
               {t("home.itemsFound", { count: nodeCount })}
             </span>
           </>
@@ -31,7 +31,7 @@ export function ScanProgress() {
         {status === "done" && (
           <>
             <CheckCircle size={15} className="text-accent-cyan" />
-            <span className="text-white/70">{t("home.scanComplete")}</span>
+            <span className="text-fg-secondary">{t("home.scanComplete")}</span>
           </>
         )}
 

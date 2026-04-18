@@ -26,7 +26,7 @@ type VirtualRow =
   | { kind: "row"; node: ScanNode; parentSize: number };
 
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey | null; sortDir: SortDir }) {
-  if (col !== sortKey) return <ChevronsUpDown size={11} className="text-white/20" />;
+  if (col !== sortKey) return <ChevronsUpDown size={11} className="text-fg-muted" />;
   return sortDir === "asc"
     ? <ChevronUp size={11} className="text-blue-400" />
     : <ChevronDown size={11} className="text-blue-400" />;
@@ -124,7 +124,7 @@ export function ContentsTable() {
   if (!focusedPath || !result) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-6 text-center">
-        <p className="text-xs text-white/30">{t("explorer.emptyContents")}</p>
+        <p className="text-xs text-fg-muted">{t("explorer.emptyContents")}</p>
       </div>
     );
   }
@@ -132,7 +132,7 @@ export function ContentsTable() {
   if (children !== null && children.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-6 text-center">
-        <p className="text-xs text-white/30">{t("explorer.contents.emptyFolder")}</p>
+        <p className="text-xs text-fg-muted">{t("explorer.contents.emptyFolder")}</p>
       </div>
     );
   }
@@ -140,13 +140,13 @@ export function ContentsTable() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header controls */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-white/8 px-3 py-1.5">
+      <div className="flex shrink-0 items-center gap-2 border-b border-canvas-border px-3 py-1.5">
         <button
           role="button"
           aria-label={t("explorer.contents.colName")}
           className={cn(
             "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors",
-            sortKey === "name" ? "text-white/80" : "text-white/40 hover:text-white/60"
+            sortKey === "name" ? "text-fg-primary" : "text-fg-muted hover:text-fg-secondary"
           )}
           onClick={() => handleSortClick("name")}
         >
@@ -155,7 +155,7 @@ export function ContentsTable() {
         </button>
         <div className="flex-1" />
         <select
-          className="rounded bg-white/5 px-2 py-0.5 text-xs text-white/50 outline-none"
+          className="rounded bg-canvas-hover px-2 py-0.5 text-xs text-fg-secondary outline-none"
           value={groupMode}
           onChange={(e) => setGroupMode(e.target.value as GroupMode)}
         >
@@ -167,7 +167,7 @@ export function ContentsTable() {
           aria-label={t("explorer.contents.colSize")}
           className={cn(
             "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors",
-            sortKey === "size" ? "text-white/80" : "text-white/40 hover:text-white/60"
+            sortKey === "size" ? "text-fg-primary" : "text-fg-muted hover:text-fg-secondary"
           )}
           onClick={() => handleSortClick("size")}
         >
@@ -188,7 +188,7 @@ export function ContentsTable() {
                 style={{ position: "absolute", top: vItem.start, left: 0, right: 0 }}
               >
                 {row.kind === "group-header" ? (
-                  <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-widest text-white/25">
+                  <div className="px-3 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
                     {row.label}
                   </div>
                 ) : (

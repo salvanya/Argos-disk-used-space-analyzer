@@ -29,7 +29,7 @@ export function RecentScans({ scans, onOpen }: RecentScansProps) {
 
   if (scans.length === 0) {
     return (
-      <p className="text-xs text-white/25">{t("home.noRecentScans")}</p>
+      <p className="text-xs text-fg-muted">{t("home.noRecentScans")}</p>
     );
   }
 
@@ -39,16 +39,16 @@ export function RecentScans({ scans, onOpen }: RecentScansProps) {
         <li key={scan.root_path}>
           <button
             onClick={() => onOpen(scan)}
-            className="glass group flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition hover:border-white/20"
+            className="glass group flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition hover:border-canvas-border"
           >
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span
-                className="truncate font-mono text-xs text-white/70 group-hover:text-white/90"
+                className="truncate font-mono text-xs text-fg-secondary group-hover:text-fg-primary"
                 title={scan.root_path}
               >
                 {scan.root_path}
               </span>
-              <div className="flex items-center gap-3 text-[11px] text-white/30">
+              <div className="flex items-center gap-3 text-[11px] text-fg-muted">
                 <span className="flex items-center gap-1">
                   <HardDrive size={10} />
                   {formatBytes(scan.total_size)}

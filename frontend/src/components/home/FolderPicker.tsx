@@ -16,18 +16,18 @@ export function FolderPicker() {
     <div className="flex flex-col gap-3">
       <button
         onClick={handleChoose}
-        className="flex items-center gap-2 rounded-sm border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white/80 transition hover:border-accent-blue/50 hover:bg-white/8 hover:text-white"
+        className="flex items-center gap-2 rounded-sm border border-canvas-border bg-canvas-hover px-4 py-2.5 text-sm text-fg-secondary transition hover:border-accent-blue/50 hover:text-fg-primary"
       >
         <FolderOpen size={16} className="text-accent-blue" />
         {t("home.chooseFolder")}
       </button>
 
       {selectedPath ? (
-        <p className="truncate font-mono text-xs text-white/50" title={selectedPath}>
+        <p className="truncate font-mono text-xs text-fg-secondary" title={selectedPath}>
           {selectedPath}
         </p>
       ) : (
-        <p className="text-xs text-white/25">{t("home.noFolderSelected")}</p>
+        <p className="text-xs text-fg-muted">{t("home.noFolderSelected")}</p>
       )}
     </div>
   );

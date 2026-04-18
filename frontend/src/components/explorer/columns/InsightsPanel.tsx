@@ -27,8 +27,8 @@ export function InsightsPanel() {
       <div className="glass flex h-full flex-col overflow-hidden">
         <PanelHeader />
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
-          <BarChart2 size={28} className="text-white/15" />
-          <p className="text-xs text-white/30">{t("explorer.insights.noData")}</p>
+          <BarChart2 size={28} className="text-fg-muted" />
+          <p className="text-xs text-fg-muted">{t("explorer.insights.noData")}</p>
         </div>
       </div>
     );
@@ -55,8 +55,8 @@ export function InsightsPanel() {
 function PanelHeader() {
   const { t } = useTranslation();
   return (
-    <div className="border-b border-white/10 px-4 py-3 shrink-0">
-      <span className="text-xs font-semibold uppercase tracking-widest text-white/40">
+    <div className="border-b border-canvas-border px-4 py-3 shrink-0">
+      <span className="text-xs font-semibold uppercase tracking-widest text-fg-muted">
         {t("explorer.insightsPanel")}
       </span>
     </div>
@@ -94,9 +94,9 @@ interface StatTileProps {
 
 function StatTile({ label, value, title }: StatTileProps) {
   return (
-    <div className="rounded-lg bg-white/5 border border-white/8 px-3 py-2 min-w-0">
-      <p className="text-[10px] text-white/40 uppercase tracking-wider truncate">{label}</p>
-      <p className="text-sm font-semibold text-white/80 truncate mt-0.5" title={title}>{value}</p>
+    <div className="rounded-lg bg-canvas-hover border border-canvas-border px-3 py-2 min-w-0">
+      <p className="text-[10px] text-fg-muted uppercase tracking-wider truncate">{label}</p>
+      <p className="text-sm font-semibold text-fg-primary truncate mt-0.5" title={title}>{value}</p>
     </div>
   );
 }
@@ -131,10 +131,11 @@ function PieSection({ slices }: PieSectionProps) {
             <Tooltip
               formatter={(value: number) => formatSize(value)}
               contentStyle={{
-                background: "rgba(10,10,11,0.9)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "var(--bg-modal)",
+                border: "1px solid var(--bg-surface-border)",
                 borderRadius: 8,
                 fontSize: 12,
+                color: "var(--text-primary)",
               }}
             />
             <Legend
@@ -171,13 +172,13 @@ function TopNSection({ items, n }: TopNSectionProps) {
                 {node.node_type === "folder" ? (
                   <Folder size={11} className="shrink-0 text-accent-blue" />
                 ) : (
-                  <FileText size={11} className="shrink-0 text-white/40" />
+                  <FileText size={11} className="shrink-0 text-fg-muted" />
                 )}
-                <span className="truncate text-white/70" title={node.path}>{node.name}</span>
+                <span className="truncate text-fg-secondary" title={node.path}>{node.name}</span>
               </span>
-              <span className="shrink-0 text-white/40 font-mono">{formatSize(node.size)}</span>
+              <span className="shrink-0 text-fg-muted font-mono">{formatSize(node.size)}</span>
             </div>
-            <div className="h-0.5 w-full rounded-full bg-white/5">
+            <div className="h-0.5 w-full rounded-full bg-canvas-hover">
               <div
                 className="h-full rounded-full bg-accent-blue/60 transition-all"
                 style={{ width: `${Math.max(pct * 100, 0.5)}%` }}
@@ -204,13 +205,13 @@ function TypeBreakdownSection({ rows }: TypeBreakdownSectionProps) {
         {rows.map((row) => (
           <div key={row.category} className="text-xs">
             <div className="flex items-center justify-between gap-2 mb-0.5">
-              <span className="text-white/70 truncate">{row.category}</span>
-              <span className="shrink-0 text-white/40 font-mono">
+              <span className="text-fg-secondary truncate">{row.category}</span>
+              <span className="shrink-0 text-fg-muted font-mono">
                 {formatSize(row.size)}
-                <span className="text-white/25 ml-1">({row.count})</span>
+                <span className="text-fg-muted ml-1">({row.count})</span>
               </span>
             </div>
-            <div className="h-0.5 w-full rounded-full bg-white/5">
+            <div className="h-0.5 w-full rounded-full bg-canvas-hover">
               <div
                 className="h-full rounded-full bg-violet-400/50 transition-all"
                 style={{ width: `${Math.max(row.pct * 100, 0.5)}%` }}
@@ -225,7 +226,7 @@ function TypeBreakdownSection({ rows }: TypeBreakdownSectionProps) {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-[10px] font-semibold uppercase tracking-widest text-white/35">
+    <h3 className="text-[10px] font-semibold uppercase tracking-widest text-fg-muted">
       {children}
     </h3>
   );

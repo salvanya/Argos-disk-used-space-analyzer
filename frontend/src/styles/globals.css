@@ -25,6 +25,11 @@
     --text-secondary: rgba(255 255 255 / 0.55);
     --text-muted: rgba(255 255 255 / 0.3);
 
+    /* Interactive surfaces */
+    --bg-hover: rgba(255 255 255 / 0.08);
+    --bg-selected: rgba(255 255 255 / 0.10);
+    --bg-modal: rgba(26 26 31 / 0.95);
+
     /* Radius */
     --radius-base: 12px;
     --radius-lg: 16px;
@@ -35,9 +40,16 @@
     --bg-base: #fafafa;
     --bg-surface: rgba(255 255 255 / 0.6);
     --bg-surface-border: rgba(0 0 0 / 0.08);
+    --bg-hover: rgba(0 0 0 / 0.05);
+    --bg-selected: rgba(0 0 0 / 0.08);
+    --bg-modal: rgba(248 248 250 / 0.97);
     --text-primary: rgba(0 0 0 / 0.9);
     --text-secondary: rgba(0 0 0 / 0.5);
     --text-muted: rgba(0 0 0 / 0.3);
+  }
+
+  .light .aurora-orb {
+    opacity: 0.04;
   }
 
   html {

@@ -46,27 +46,27 @@ export function ContextMenu({ x, y, node: _node, onClose, onCopyPath, onProperti
     <div
       ref={ref}
       role="menu"
-      className="fixed z-50 min-w-[160px] rounded-xl border border-white/10 bg-[#1a1a1f]/90 py-1 shadow-xl backdrop-blur-xl"
+      className="fixed z-50 min-w-[160px] rounded-xl border border-canvas-border bg-canvas-modal py-1 shadow-xl backdrop-blur-xl"
       style={{ left: x, top: y }}
     >
       <button
         role="menuitem"
-        className="flex w-full items-center px-3 py-1.5 text-left text-sm text-white/80 hover:bg-white/10"
+        className="flex w-full items-center px-3 py-1.5 text-left text-sm text-fg-primary hover:bg-canvas-hover"
         onClick={() => { onCopyPath(); onClose(); }}
       >
         {t("explorer.contents.copyPath")}
       </button>
       <button
         role="menuitem"
-        className="flex w-full items-center px-3 py-1.5 text-left text-sm text-white/80 hover:bg-white/10"
+        className="flex w-full items-center px-3 py-1.5 text-left text-sm text-fg-primary hover:bg-canvas-hover"
         onClick={() => { onProperties(); onClose(); }}
       >
         {t("explorer.contents.properties")}
       </button>
-      <div className="my-1 border-t border-white/10" />
+      <div className="my-1 border-t border-canvas-border" />
       <button
         role="menuitem"
-        className="flex w-full items-center px-3 py-1.5 text-left text-sm text-white/80 hover:bg-white/10"
+        className="flex w-full items-center px-3 py-1.5 text-left text-sm text-fg-primary hover:bg-canvas-hover"
         onClick={() => { onOpenInExplorer(); onClose(); }}
       >
         {t("explorer.contents.openInExplorer")}
