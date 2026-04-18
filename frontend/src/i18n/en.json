@@ -10,11 +10,21 @@
     "boundaryTitle": "Something went wrong",
     "boundaryMessage": "The view crashed unexpectedly. Try again, or reload the page.",
     "retry": "Try again",
-    "permissionDenied": "This folder is inaccessible. Elevated privileges may be required."
+    "permissionDenied": "This folder is inaccessible. Elevated privileges may be required.",
+    "uacDeclined": "The elevation prompt was declined.",
+    "alreadyElevated": "Argos is already running as administrator.",
+    "platformUnsupported": "Relaunch is only supported on Windows."
   },
   "admin": {
     "elevated": "Running as administrator",
-    "standard": "Standard user"
+    "standard": "Standard user",
+    "relaunch": "Relaunch as administrator",
+    "relaunchConfirm": {
+      "title": "Relaunch as administrator?",
+      "body": "Argos will close and reopen with elevated privileges so it can read protected folders.",
+      "cta": "Relaunch",
+      "cancel": "Cancel"
+    }
   },
   "home": {
     "title": "Where should we look?",

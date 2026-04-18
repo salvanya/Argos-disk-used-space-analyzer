@@ -10,11 +10,21 @@
     "boundaryTitle": "Algo salió mal",
     "boundaryMessage": "La vista falló inesperadamente. Intenta de nuevo o recarga la página.",
     "retry": "Reintentar",
-    "permissionDenied": "Esta carpeta no es accesible. Puede requerir privilegios elevados."
+    "permissionDenied": "Esta carpeta no es accesible. Puede requerir privilegios elevados.",
+    "uacDeclined": "Se rechazó la solicitud de elevación.",
+    "alreadyElevated": "Argos ya se está ejecutando como administrador.",
+    "platformUnsupported": "El reinicio elevado solo está disponible en Windows."
   },
   "admin": {
     "elevated": "Ejecutando como administrador",
-    "standard": "Usuario estándar"
+    "standard": "Usuario estándar",
+    "relaunch": "Reiniciar como administrador",
+    "relaunchConfirm": {
+      "title": "¿Reiniciar como administrador?",
+      "body": "Argos se cerrará y volverá a abrirse con privilegios elevados para poder leer carpetas protegidas.",
+      "cta": "Reiniciar",
+      "cancel": "Cancelar"
+    }
   },
   "home": {
     "title": "¿Dónde miramos?",

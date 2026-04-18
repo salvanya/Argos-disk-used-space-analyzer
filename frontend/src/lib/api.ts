@@ -66,6 +66,18 @@ export async function openInExplorer(path: string): Promise<void> {
   return post("/api/fs/open", { path });
 }
 
+export async function relaunchAdmin(): Promise<void> {
+  return post("/api/system/relaunch-admin", {});
+}
+
+export async function deleteAllScans(): Promise<void> {
+  const resp = await fetch("/api/scans", {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!resp.ok) throw new Error(`DELETE /api/scans → ${resp.status}`);
+}
+
 export async function deleteItem(path: string, permanent: boolean): Promise<void> {
   return del("/api/fs/item", { path, permanent, confirm: true });
 }

@@ -10,7 +10,7 @@ import { Explorer } from "./pages/Explorer";
 import { useAppStore } from "./stores/appStore";
 
 function AppBootstrap() {
-  const { setToken: storeToken, setIsAdmin, locale, theme } = useAppStore();
+  const { setToken: storeToken, setIsAdmin, setPlatform, locale, theme } = useAppStore();
   const { i18n } = useTranslation();
 
   useEffect(() => {
@@ -29,9 +29,10 @@ function AppBootstrap() {
       storeToken(config.token);
       const info = await fetchSystemInfo();
       setIsAdmin(info.is_admin);
+      setPlatform(info.platform);
     }
     bootstrap().catch(console.error);
-  }, [storeToken, setIsAdmin]);
+  }, [storeToken, setIsAdmin, setPlatform]);
 
   return (
     <>

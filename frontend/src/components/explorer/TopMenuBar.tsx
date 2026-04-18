@@ -16,6 +16,8 @@ import { useAppStore } from "../../stores/appStore";
 import { useExplorerStore } from "../../stores/explorerStore";
 import { useScanStore } from "../../stores/scanStore";
 import { connectScanWs } from "../../lib/api";
+import { AdminBadge } from "./AdminBadge";
+import { RelaunchAdminButton } from "./RelaunchAdminButton";
 
 function MenuButton({
   label,
@@ -115,6 +117,12 @@ export function TopMenuBar() {
       >
         <RefreshCw size={14} className={isScanning ? "animate-spin" : ""} />
       </MenuButton>
+
+      <div className="mx-2 h-4 w-px bg-canvas-border" />
+
+      {/* Admin status */}
+      <AdminBadge />
+      <RelaunchAdminButton />
 
       <div className="flex-1" />
 
