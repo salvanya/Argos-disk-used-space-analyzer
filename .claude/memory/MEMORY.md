@@ -19,3 +19,4 @@
 - [mypy ctypes windll](lessons/mypy-ctypes-windll.md) — mypy can't resolve ctypes.windll attributes; use type: ignore sparingly
 - [httpx asgi transport](lessons/httpx-asgi-transport.md) — Use httpx.AsyncClient(transport=ASGITransport(...)) for FastAPI integration tests
 - [windows junction detection](lessons/windows-junction-detection.md) — os.path.ismount() detects junctions on Windows; is_symlink() misses them
+- [npm not pnpm in bash](lessons/npm-not-pnpm-in-bash.md) — pnpm not on PATH in Bash tool; use npm install / npm run instead
