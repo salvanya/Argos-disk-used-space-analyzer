@@ -22,6 +22,22 @@
     "openRecent": "Abrir",
     "scanError": "Error en el análisis: {{message}}"
   },
+  "explorer": {
+    "back": "Volver",
+    "rescan": "Reanalizar",
+    "toggleTheme": "Cambiar tema",
+    "toggleLanguage": "Cambiar idioma",
+    "toggleHidden": "Mostrar archivos ocultos",
+    "toggleSymlinks": "Seguir enlaces simbólicos",
+    "viewColumns": "Vista de columnas",
+    "view3d": "Vista 3D",
+    "foldersPanel": "Carpetas",
+    "contentsPanel": "Contenido",
+    "insightsPanel": "Análisis",
+    "emptyFolders": "El árbol de carpetas aparecerá aquí tras el análisis.",
+    "emptyContents": "Selecciona una carpeta para ver su contenido.",
+    "emptyInsights": "Los gráficos y estadísticas aparecerán aquí."
+  },
   "units": {
     "files": "{{count}} archivos",
     "folders": "{{count}} carpetas",

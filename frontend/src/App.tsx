@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { AuroraBackground } from "./components/layout/AuroraBackground";
 import "./i18n";
 import { fetchConfig, fetchSystemInfo, setToken } from "./lib/api";
@@ -8,7 +9,17 @@ import { Explorer } from "./pages/Explorer";
 import { useAppStore } from "./stores/appStore";
 
 function AppBootstrap() {
-  const { setToken: storeToken, setIsAdmin } = useAppStore();
+  const { setToken: storeToken, setIsAdmin, locale, theme } = useAppStore();
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    // Hydrate theme class (belt-and-suspenders; index.html inline script handles flash)
+    document.documentElement.classList.toggle("light", theme === "light");
+  }, [theme]);
+
+  useEffect(() => {
+    void i18n.changeLanguage(locale);
+  }, [locale, i18n]);
 
   useEffect(() => {
     async function bootstrap() {

@@ -1,14 +1,38 @@
-import { Header } from "../components/layout/Header";
+import { RequireScan } from "../components/explorer/RequireScan";
+import { TopMenuBar } from "../components/explorer/TopMenuBar";
+import { FolderTreePanel } from "../components/explorer/columns/FolderTreePanel";
+import { ContentsPanel } from "../components/explorer/columns/ContentsPanel";
+import { InsightsPanel } from "../components/explorer/columns/InsightsPanel";
+
+function ExplorerLayout() {
+  return (
+    <div className="flex h-screen flex-col overflow-hidden">
+      <TopMenuBar />
+
+      <div className="flex min-h-0 flex-1 gap-2 p-2">
+        {/* Left: Folder tree — fixed 240px */}
+        <div className="w-60 flex-shrink-0">
+          <FolderTreePanel />
+        </div>
+
+        {/* Middle: Contents — fills remaining space */}
+        <div className="min-w-0 flex-1">
+          <ContentsPanel />
+        </div>
+
+        {/* Right: Insights — fixed 320px */}
+        <div className="w-80 flex-shrink-0">
+          <InsightsPanel />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function Explorer() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-      <main className="flex flex-1 items-center justify-center">
-        <div className="glass p-10 text-center">
-          <p className="text-sm text-white/40">Explorer — coming in M4</p>
-        </div>
-      </main>
-    </div>
+    <RequireScan>
+      <ExplorerLayout />
+    </RequireScan>
   );
 }

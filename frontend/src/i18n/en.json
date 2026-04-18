@@ -22,6 +22,22 @@
     "openRecent": "Open",
     "scanError": "Scan failed: {{message}}"
   },
+  "explorer": {
+    "back": "Back",
+    "rescan": "Rescan",
+    "toggleTheme": "Toggle theme",
+    "toggleLanguage": "Toggle language",
+    "toggleHidden": "Show hidden files",
+    "toggleSymlinks": "Follow symlinks",
+    "viewColumns": "Columns view",
+    "view3d": "3D view",
+    "foldersPanel": "Folders",
+    "contentsPanel": "Contents",
+    "insightsPanel": "Insights",
+    "emptyFolders": "Folder tree will appear here after scan.",
+    "emptyContents": "Select a folder to see its contents.",
+    "emptyInsights": "Charts and insights will appear here."
+  },
   "units": {
     "files": "{{count}} files",
     "folders": "{{count}} folders",
