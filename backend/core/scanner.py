@@ -8,6 +8,7 @@ API layer via ``asyncio.run_in_executor``, not here.
 
 from __future__ import annotations
 
+import fnmatch
 import logging
 import os
 import time
@@ -21,6 +22,23 @@ from backend.core.windows_utils import is_hidden, is_link, is_system_file
 __all__ = ["DiskScanner"]
 
 logger = logging.getLogger(__name__)
+
+
+def _is_excluded(path: Path, globs: list[str]) -> bool:
+    """Return True if *path* matches any of the exclusion *globs*.
+
+    Matches against the forward-slashed absolute path so ``**/node_modules/**``
+    works on every platform regardless of OS path separators.  A trailing
+    ``/**`` is treated as also matching the directory itself so users can
+    exclude ``node_modules`` and all of its descendants with a single glob.
+    """
+    posix = path.as_posix()
+    for glob in globs:
+        if fnmatch.fnmatch(posix, glob):
+            return True
+        if glob.endswith("/**") and fnmatch.fnmatch(posix, glob[:-3]):
+            return True
+    return False
 
 
 class DiskScanner:
@@ -150,6 +168,9 @@ class DiskScanner:
                     continue
                 if not options.include_system and is_system_file(entry_path):
                     continue
+
+            if options.exclude and _is_excluded(entry_path, options.exclude):
+                continue
 
             child = self._walk(entry_path, options, progress_callback, state)
             children.append(child)

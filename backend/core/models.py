@@ -6,7 +6,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class NodeType(StrEnum):
@@ -18,6 +18,15 @@ class NodeType(StrEnum):
 class ScanOptions(BaseModel):
     include_hidden: bool = False
     include_system: bool = False
+    exclude: list[str] = []
+
+    @field_validator("exclude")
+    @classmethod
+    def _validate_exclude(cls, value: list[str]) -> list[str]:
+        for glob in value:
+            if not glob or not glob.strip():
+                raise ValueError("exclusion glob must be a non-empty string")
+        return value
 
 
 class ScanNode(BaseModel):
