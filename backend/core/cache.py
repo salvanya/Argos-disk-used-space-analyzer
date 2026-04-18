@@ -113,6 +113,15 @@ class ScanCache:
         except sqlite3.Error as exc:
             raise CacheError(f"Failed to delete cache for {key!r}: {exc}") from exc
 
+    def clear(self) -> None:
+        """Remove every cached scan.  Idempotent — no-op on an empty cache."""
+        try:
+            with self._connect() as conn:
+                conn.execute("DELETE FROM scans")
+                conn.commit()
+        except sqlite3.Error as exc:
+            raise CacheError(f"Failed to clear cache: {exc}") from exc
+
     def list_roots(self) -> list[tuple[str, datetime]]:
         """Return ``(root_path, scanned_at)`` pairs for every cached scan."""
         try:

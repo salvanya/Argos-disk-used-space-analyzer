@@ -110,6 +110,13 @@ async def delete_scan(
     return Response(status_code=204)
 
 
+@router.delete("/scans", status_code=204)
+async def delete_all_scans(cache: ScanCache = Depends(get_cache)) -> Response:
+    """Evict every cached scan.  Idempotent — 204 even on empty cache."""
+    cache.clear()
+    return Response(status_code=204)
+
+
 # ---------------------------------------------------------------------------
 # WebSocket helpers
 # ---------------------------------------------------------------------------
