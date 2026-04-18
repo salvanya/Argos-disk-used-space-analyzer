@@ -1,26 +1,18 @@
 # Current State — 2026-04-18
 
 ## In Progress
-Nothing — M8 just completed and committed (a01e424).
+Nothing — M10 complete and committed (96a313d).
 
 ## Last Completed
-- Commit a01e424: M8 deletion + open-in-explorer — POST /api/fs/open, DELETE /api/fs/item, DeleteConfirmModal, ContextMenu enabled, scanStore.removeNode, 14 new backend tests (93 total), 7 new/updated frontend tests (127 total)
+- Commit 96a313d: M10 3D graph view — react-force-graph-3d + three, lazy-loaded chunk, graph3d/ module with log-scaled radii + theme palette, view-mode branching in Explorer.tsx, downsample at 5000 nodes, EN/ES i18n. 148 frontend tests, 93 backend tests.
 
 ## Next Step
-Start M9 — i18n (EN/ES) + theme toggle.
-Run `/plan M9` first.
-Key constraints:
-- Theme toggle: dark/light, persisted in localStorage
-- Language toggle: EN/ES, persisted in localStorage
-- All UI strings already use react-i18next keys; en.json and es.json are complete through M8
-- Theme: Tailwind dark mode class strategy (class on <html> or <body>)
-- Need to verify light-mode glassmorphism looks premium, not washed out
+Start **M11 — Polish** (animations, empty states, error states, accessibility pass).
+Run `/plan M11` first.
 
 ## Open Questions
-- None.
+- Pre-existing build errors in `frontend/src/components/explorer/columns/InsightsPanel.tsx` (Recharts Formatter type) and `frontend/vite.config.ts` (`test` field typed against UserConfigExport). `vite build` succeeds alone; only `tsc -b` fails. Consider fixing as part of M11 polish or separately.
 
 ## Files Worth Reloading Next Session
-- frontend/src/App.tsx — where theme class likely gets applied
-- frontend/src/stores/explorerStore.ts — may already have theme/language state
-- frontend/src/i18n/en.json + es.json — already complete through M8
-- frontend/src/styles/globals.css — existing CSS variables / dark mode setup
+- `specs/m10-graph3d-view/` — just-completed spec for reference
+- CLAUDE.md §5 (Design System) for M11 polish direction
