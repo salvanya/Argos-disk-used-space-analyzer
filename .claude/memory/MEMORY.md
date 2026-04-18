@@ -20,3 +20,5 @@
 - [httpx asgi transport](lessons/httpx-asgi-transport.md) — Use httpx.AsyncClient(transport=ASGITransport(...)) for FastAPI integration tests
 - [windows junction detection](lessons/windows-junction-detection.md) — os.path.ismount() detects junctions on Windows; is_symlink() misses them
 - [npm not pnpm in bash](lessons/npm-not-pnpm-in-bash.md) — pnpm not on PATH in Bash tool; use npm install / npm run instead
+- [send2trash import alias](lessons/send2trash-import-alias.md) — Import function directly (`from send2trash import send2trash`) for clean test patching
+- [i18n interpolation in tests](lessons/i18n-key-interpolation-tests.md) — t() returns key verbatim in tests; render dynamic values outside t() as separate JSX
