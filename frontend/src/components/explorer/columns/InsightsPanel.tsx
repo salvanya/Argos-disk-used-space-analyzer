@@ -129,7 +129,7 @@ function PieSection({ slices }: PieSectionProps) {
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number) => formatSize(value)}
+              formatter={(value) => formatSize(Number(value))}
               contentStyle={{
                 background: "var(--bg-modal)",
                 border: "1px solid var(--bg-surface-border)",

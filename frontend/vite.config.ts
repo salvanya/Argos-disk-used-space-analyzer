@@ -1,7 +1,7 @@
-import { defineConfig } from "vite";
+/// <reference types="vitest" />
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import path from "path";
-/// <reference types="vitest" />
 
 // Backend port for dev proxy — set VITE_BACKEND_PORT env var when launching.
 const backendPort = parseInt(process.env["VITE_BACKEND_PORT"] ?? "8000", 10);
