@@ -114,6 +114,39 @@
     "folders": "{{count}} carpetas",
     "scannedAt": "Analizado el {{date}}"
   },
+  "settings": {
+    "title": "Ajustes",
+    "open": "Abrir ajustes",
+    "close": "Cerrar ajustes",
+    "sections": {
+      "scan": "Opciones de análisis",
+      "exclusions": "Exclusiones",
+      "cache": "Caché"
+    },
+    "scan": {
+      "includeHidden": "Incluir archivos ocultos",
+      "includeHiddenHint": "Archivos con el atributo oculto de Windows.",
+      "includeSystem": "Incluir archivos del sistema",
+      "includeSystemHint": "Archivos con el atributo de sistema de Windows."
+    },
+    "exclusions": {
+      "hint": "Patrones glob aplicados sobre la ruta absoluta con barras /. Ejemplo: **/node_modules/**",
+      "placeholder": "Introduce un glob…",
+      "add": "Añadir",
+      "remove": "Eliminar",
+      "empty": "Sin exclusiones. Se analiza todo."
+    },
+    "cache": {
+      "empty": "No hay análisis en caché.",
+      "delete": "Eliminar",
+      "clearAll": "Vaciar todo",
+      "clearAllConfirm": {
+        "title": "¿Vaciar toda la caché de análisis?",
+        "body": "Se eliminarán todos los análisis guardados. Los próximos análisis reconstruirán la caché.",
+        "cta": "Vaciar"
+      }
+    }
+  },
   "graph3d": {
     "emptyState": "Analiza una carpeta para ver el grafo 3D.",
     "legend": {

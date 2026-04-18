@@ -10,6 +10,7 @@ import { connectScanWs, listScans } from "../lib/api";
 import type { ScanSummary } from "../lib/types";
 import { useAppStore } from "../stores/appStore";
 import { useScanStore } from "../stores/scanStore";
+import { useSettingsStore } from "../stores/settingsStore";
 
 export function Home() {
   const { t } = useTranslation();
@@ -27,17 +28,25 @@ export function Home() {
 
   function triggerScan(path: string, forceRescan: boolean) {
     startScan();
-    const ws = connectScanWs(token, path, forceRescan, (msg) => {
-      if (msg.type === "progress") {
-        updateProgress(msg.node_count);
-      } else if (msg.type === "complete") {
-        completeScan(msg.result);
-        ws.close();
-        navigate("/explorer");
-      } else if (msg.type === "error") {
-        failScan(msg.message);
-      }
-    }, () => {});
+    const { include_hidden, include_system, exclude } = useSettingsStore.getState();
+    const ws = connectScanWs(
+      token,
+      path,
+      forceRescan,
+      (msg) => {
+        if (msg.type === "progress") {
+          updateProgress(msg.node_count);
+        } else if (msg.type === "complete") {
+          completeScan(msg.result);
+          ws.close();
+          navigate("/explorer");
+        } else if (msg.type === "error") {
+          failScan(msg.message);
+        }
+      },
+      () => {},
+      { include_hidden, include_system, exclude },
+    );
   }
 
   function handleScan() {

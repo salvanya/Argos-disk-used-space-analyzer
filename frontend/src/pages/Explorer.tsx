@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { RequireScan } from "../components/explorer/RequireScan";
 import { TopMenuBar } from "../components/explorer/TopMenuBar";
+import { SettingsDrawer } from "../components/explorer/settings/SettingsDrawer";
 import { FolderTreePanel } from "../components/explorer/columns/FolderTreePanel";
 import { ContentsPanel } from "../components/explorer/columns/ContentsPanel";
 import { InsightsPanel } from "../components/explorer/columns/InsightsPanel";
@@ -59,6 +60,7 @@ function ExplorerLayout() {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       <TopMenuBar />
+      <SettingsDrawer />
       <AnimatePresence mode="wait">
         {viewMode === "3d" ? (
           <motion.div

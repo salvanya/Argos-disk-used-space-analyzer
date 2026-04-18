@@ -78,8 +78,27 @@ export async function deleteAllScans(): Promise<void> {
   if (!resp.ok) throw new Error(`DELETE /api/scans → ${resp.status}`);
 }
 
+function encodeRootB64(rootPath: string): string {
+  return btoa(rootPath).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export async function deleteScan(rootPath: string): Promise<void> {
+  const b64 = encodeRootB64(rootPath);
+  const resp = await fetch(`/api/scan/${b64}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!resp.ok) throw new Error(`DELETE /api/scan → ${resp.status}`);
+}
+
 export async function deleteItem(path: string, permanent: boolean): Promise<void> {
   return del("/api/fs/item", { path, permanent, confirm: true });
+}
+
+export interface ScanOptionsPayload {
+  include_hidden?: boolean;
+  include_system?: boolean;
+  exclude?: string[];
 }
 
 export function connectScanWs(
@@ -88,13 +107,14 @@ export function connectScanWs(
   forceRescan: boolean,
   onMessage: (msg: WsMessage) => void,
   onClose: () => void,
+  options: ScanOptionsPayload = {},
 ): WebSocket {
   const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
   const ws = new WebSocket(`${wsProto}//${window.location.host}/ws/scan`);
 
   ws.onopen = () => {
     ws.send(
-      JSON.stringify({ token, root, options: {}, force_rescan: forceRescan }),
+      JSON.stringify({ token, root, options, force_rescan: forceRescan }),
     );
   };
 

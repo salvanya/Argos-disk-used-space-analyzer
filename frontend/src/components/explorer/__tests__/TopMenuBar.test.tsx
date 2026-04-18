@@ -21,7 +21,7 @@ function renderBar() {
 
 beforeEach(() => {
   useAppStore.setState({ theme: "dark", locale: "en" });
-  useExplorerStore.setState({ viewMode: "columns", showHidden: false, followSymlinks: false });
+  useExplorerStore.setState({ viewMode: "columns", showHidden: false, settingsOpen: false });
   useScanStore.setState({ status: "idle", selectedPath: "C:/test", result: null });
   document.documentElement.classList.remove("light");
   localStorage.clear();

@@ -5,21 +5,21 @@ type ViewMode = "columns" | "3d";
 interface ExplorerState {
   viewMode: ViewMode;
   showHidden: boolean;
-  followSymlinks: boolean;
   focusedPath: string | null;
+  settingsOpen: boolean;
   setViewMode: (mode: ViewMode) => void;
   toggleHidden: () => void;
-  toggleSymlinks: () => void;
   setFocusedPath: (path: string | null) => void;
+  setSettingsOpen: (open: boolean) => void;
 }
 
 export const useExplorerStore = create<ExplorerState>((set) => ({
   viewMode: "columns",
   showHidden: false,
-  followSymlinks: false,
   focusedPath: null,
+  settingsOpen: false,
   setViewMode: (viewMode) => set({ viewMode }),
   toggleHidden: () => set((s) => ({ showHidden: !s.showHidden })),
-  toggleSymlinks: () => set((s) => ({ followSymlinks: !s.followSymlinks })),
   setFocusedPath: (focusedPath) => set({ focusedPath }),
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
 }));

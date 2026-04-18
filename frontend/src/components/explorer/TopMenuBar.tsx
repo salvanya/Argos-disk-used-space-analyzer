@@ -7,14 +7,15 @@ import {
   Languages,
   EyeOff,
   Eye,
-  Link,
   Columns2,
   Box,
   RefreshCw,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useAppStore } from "../../stores/appStore";
 import { useExplorerStore } from "../../stores/explorerStore";
 import { useScanStore } from "../../stores/scanStore";
+import { useSettingsStore } from "../../stores/settingsStore";
 import { connectScanWs } from "../../lib/api";
 import { AdminBadge } from "./AdminBadge";
 import { RelaunchAdminButton } from "./RelaunchAdminButton";
@@ -60,7 +61,7 @@ export function TopMenuBar() {
   const navigate = useNavigate();
 
   const { theme, locale, setTheme, setLocale } = useAppStore();
-  const { viewMode, showHidden, followSymlinks, setViewMode, toggleHidden, toggleSymlinks } =
+  const { viewMode, showHidden, setViewMode, toggleHidden, setSettingsOpen } =
     useExplorerStore();
   const { status, selectedPath, startScan, updateProgress, completeScan, failScan } =
     useScanStore();
@@ -84,6 +85,7 @@ export function TopMenuBar() {
   function handleRescan() {
     if (!selectedPath || isScanning) return;
     startScan();
+    const { include_hidden, include_system, exclude } = useSettingsStore.getState();
     const ws = connectScanWs(
       useAppStore.getState().token,
       selectedPath,
@@ -94,6 +96,7 @@ export function TopMenuBar() {
         else if (msg.type === "error") failScan(msg.message);
       },
       () => {},
+      { include_hidden, include_system, exclude },
     );
   }
 
@@ -136,15 +139,6 @@ export function TopMenuBar() {
         {showHidden ? <Eye size={14} /> : <EyeOff size={14} />}
       </MenuButton>
 
-      <MenuButton
-        label={t("explorer.toggleSymlinks")}
-        onClick={toggleSymlinks}
-        active={followSymlinks}
-        toggle
-      >
-        <Link size={14} />
-      </MenuButton>
-
       <div className="mx-2 h-4 w-px bg-canvas-border" />
 
       {/* View mode */}
@@ -174,6 +168,10 @@ export function TopMenuBar() {
 
       <MenuButton label={t("explorer.toggleTheme")} onClick={handleTheme}>
         {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+      </MenuButton>
+
+      <MenuButton label={t("settings.open")} onClick={() => setSettingsOpen(true)}>
+        <SettingsIcon size={14} />
       </MenuButton>
     </nav>
   );

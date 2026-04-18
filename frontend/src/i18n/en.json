@@ -60,6 +60,7 @@
     "emptyFolders": "Folder tree will appear here after scan.",
     "emptyContents": "Select a folder to see its contents.",
     "emptyInsights": "Charts and insights will appear here.",
+    "viewSettings": "Settings",
     "a11y": {
       "tree": "Folder tree",
       "contents": "Folder contents",
@@ -113,6 +114,39 @@
     "files": "{{count}} files",
     "folders": "{{count}} folders",
     "scannedAt": "Scanned {{date}}"
+  },
+  "settings": {
+    "title": "Settings",
+    "open": "Open settings",
+    "close": "Close settings",
+    "sections": {
+      "scan": "Scan options",
+      "exclusions": "Exclusions",
+      "cache": "Cache"
+    },
+    "scan": {
+      "includeHidden": "Include hidden files",
+      "includeHiddenHint": "Files with the Windows hidden attribute set.",
+      "includeSystem": "Include system files",
+      "includeSystemHint": "Files with the Windows system attribute set."
+    },
+    "exclusions": {
+      "hint": "Glob patterns matched against the forward-slashed absolute path. Example: **/node_modules/**",
+      "placeholder": "Enter a glob…",
+      "add": "Add",
+      "remove": "Remove",
+      "empty": "No exclusions. Everything is scanned."
+    },
+    "cache": {
+      "empty": "No cached scans.",
+      "delete": "Delete",
+      "clearAll": "Clear all",
+      "clearAllConfirm": {
+        "title": "Clear all cached scans?",
+        "body": "All cached scan results will be removed. Future scans will rebuild the cache.",
+        "cta": "Clear"
+      }
+    }
   },
   "graph3d": {
     "emptyState": "Scan a folder to see the 3D graph.",

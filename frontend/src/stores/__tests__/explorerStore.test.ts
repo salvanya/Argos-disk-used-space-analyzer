@@ -5,7 +5,7 @@ beforeEach(() => {
   useExplorerStore.setState({
     viewMode: "columns",
     showHidden: false,
-    followSymlinks: false,
+    settingsOpen: false,
   });
 });
 
@@ -14,7 +14,7 @@ describe("explorerStore", () => {
     const s = useExplorerStore.getState();
     expect(s.viewMode).toBe("columns");
     expect(s.showHidden).toBe(false);
-    expect(s.followSymlinks).toBe(false);
+    expect(s.settingsOpen).toBe(false);
   });
 
   it("toggleHidden flips showHidden", () => {
@@ -24,11 +24,11 @@ describe("explorerStore", () => {
     expect(useExplorerStore.getState().showHidden).toBe(false);
   });
 
-  it("toggleSymlinks flips followSymlinks", () => {
-    useExplorerStore.getState().toggleSymlinks();
-    expect(useExplorerStore.getState().followSymlinks).toBe(true);
-    useExplorerStore.getState().toggleSymlinks();
-    expect(useExplorerStore.getState().followSymlinks).toBe(false);
+  it("setSettingsOpen updates settingsOpen", () => {
+    useExplorerStore.getState().setSettingsOpen(true);
+    expect(useExplorerStore.getState().settingsOpen).toBe(true);
+    useExplorerStore.getState().setSettingsOpen(false);
+    expect(useExplorerStore.getState().settingsOpen).toBe(false);
   });
 
   it("setViewMode updates viewMode", () => {
