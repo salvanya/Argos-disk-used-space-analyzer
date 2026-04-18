@@ -22,3 +22,5 @@
 - [npm not pnpm in bash](lessons/npm-not-pnpm-in-bash.md) — pnpm not on PATH in Bash tool; use npm install / npm run instead
 - [send2trash import alias](lessons/send2trash-import-alias.md) — Import function directly (`from send2trash import send2trash`) for clean test patching
 - [i18n interpolation in tests](lessons/i18n-key-interpolation-tests.md) — t() returns key verbatim in tests; render dynamic values outside t() as separate JSX
+- [backend venv required](lessons/backend-venv-required.md) — Run pytest via `.venv/Scripts/python.exe`; system Python lacks pytest-asyncio → `Unknown config option: asyncio_mode`
+- [webgl libs jsdom](lessons/webgl-libs-jsdom.md) — Mock react-force-graph-3d + stub ResizeObserver in test-setup; jsdom has no WebGL or ResizeObserver
