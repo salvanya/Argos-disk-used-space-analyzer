@@ -1,27 +1,26 @@
 # Current State — 2026-04-18
 
 ## In Progress
-Nothing — M3 just completed and committed (ca8c095).
+Nothing — M4 just completed and committed (fb0d9f8).
 
 ## Last Completed
-- Commit ca8c095: M3 Home screen (folder picker, recent scans, admin shield, aurora bg, i18n EN/ES, 9 new tests)
+- Commit fb0d9f8: M4 Explorer scaffold (three-column layout, TopMenuBar, RequireScan guard, explorerStore, theme/locale persistence, 11 tests)
 
 ## Next Step
-Start M4 — Explorer screen scaffold (three-column layout with glassmorphism + top menu).
-Run `/plan M4 explorer screen` first.
+Start M5 — Left column: folder tree with sizes and parent-relative percentages.
+Run `/plan M5 folder tree` first.
 Key constraints:
-- Three-column layout: folder tree (left), contents table (middle), insights panel (right)
-- Top menu bar: rescan, settings, theme toggle, language toggle, view mode switcher
-- Glassmorphism panels with correct column proportions
-- Wire to existing GET /api/scan/{root_b64} to load the ScanResult from store/cache
-- useScanStore already holds `result: ScanResult | null` after a scan completes
+- IDE-like folder-only tree (à la VS Code), expand/collapse
+- Each entry: folder name, size, % relative to its parent level
+- Clicking a folder changes focus (updates middle column in M6)
+- FolderTreePanel.tsx is the shell to fill in
+- ScanResult is already in useScanStore; root node is `result.root`
 
 ## Open Questions
-- None at this point.
+- None.
 
 ## Files Worth Reloading Next Session
-- frontend/src/stores/scanStore.ts — holds ScanResult after scan completes
-- frontend/src/lib/api.ts — all API + WS helpers
-- frontend/src/lib/types.ts — ScanResult, ScanNode, ScanSummary TypeScript types
-- backend/api/scan.py — GET /api/scan/{root_b64} endpoint for loading cached results
-- backend/core/models.py — ScanNode, ScanResult, ScanSummary Pydantic models
+- frontend/src/components/explorer/columns/FolderTreePanel.tsx — left column shell to fill
+- frontend/src/stores/scanStore.ts — holds ScanResult.root
+- frontend/src/lib/types.ts — ScanNode type (name, path, size, children, node_type)
+- frontend/src/stores/explorerStore.ts — showHidden, followSymlinks toggles that affect tree
