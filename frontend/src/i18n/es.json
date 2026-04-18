@@ -84,5 +84,19 @@
     "files": "{{count}} archivos",
     "folders": "{{count}} carpetas",
     "scannedAt": "Analizado el {{date}}"
+  },
+  "graph3d": {
+    "emptyState": "Analiza una carpeta para ver el grafo 3D.",
+    "legend": {
+      "folder": "Carpeta",
+      "file": "Archivo",
+      "symlink": "Enlace simbólico",
+      "inaccessible": "Inaccesible"
+    },
+    "tooltip": {
+      "size": "Tamaño",
+      "children": "Hijos"
+    },
+    "downsampledNotice": "Árbol grande — {{count}} elementos profundos agregados por rendimiento."
   }
 }

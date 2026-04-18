@@ -84,5 +84,19 @@
     "files": "{{count}} files",
     "folders": "{{count}} folders",
     "scannedAt": "Scanned {{date}}"
+  },
+  "graph3d": {
+    "emptyState": "Scan a folder to see the 3D graph.",
+    "legend": {
+      "folder": "Folder",
+      "file": "File",
+      "symlink": "Symlink",
+      "inaccessible": "Inaccessible"
+    },
+    "tooltip": {
+      "size": "Size",
+      "children": "Children"
+    },
+    "downsampledNotice": "Large tree — {{count}} deep items aggregated for performance."
   }
 }

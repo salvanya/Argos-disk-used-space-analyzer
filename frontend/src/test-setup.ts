@@ -1,10 +1,50 @@
 import "@testing-library/jest-dom";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import { vi } from "vitest";
+import * as React from "react";
 
 void i18n.use(initReactI18next).init({
   lng: "en",
   fallbackLng: "en",
   resources: { en: { translation: {} } },
   interpolation: { escapeValue: false },
+});
+
+if (typeof globalThis.ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = class {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  } as unknown as typeof ResizeObserver;
+}
+
+vi.mock("react-force-graph-3d", () => {
+  const ForceGraph3D = React.forwardRef<
+    unknown,
+    {
+      graphData?: { nodes: Array<{ id: string }>; links: Array<{ source: string; target: string }> };
+      onNodeClick?: (node: { id: string }) => void;
+      onNodeHover?: (node: { id: string } | null) => void;
+    }
+  >(function ForceGraph3D(props, _ref) {
+    return React.createElement(
+      "div",
+      { "data-testid": "force-graph-3d" },
+      (props.graphData?.nodes ?? []).map((n) =>
+        React.createElement(
+          "button",
+          {
+            key: n.id,
+            "data-testid": `graph-node-${n.id}`,
+            onClick: () => props.onNodeClick?.(n),
+            onMouseEnter: () => props.onNodeHover?.(n),
+            onMouseLeave: () => props.onNodeHover?.(null),
+          },
+          n.id,
+        ),
+      ),
+    );
+  });
+  return { default: ForceGraph3D };
 });
