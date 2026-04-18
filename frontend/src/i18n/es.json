@@ -37,6 +37,20 @@
     "emptyFolders": "El árbol de carpetas aparecerá aquí tras el análisis.",
     "emptyContents": "Selecciona una carpeta para ver su contenido.",
     "emptyInsights": "Los gráficos y estadísticas aparecerán aquí.",
+    "insights": {
+      "noData": "Selecciona una carpeta para ver estadísticas.",
+      "summary": "Resumen",
+      "totalSize": "Tamaño total",
+      "files": "Archivos",
+      "folders": "Carpetas",
+      "largestFile": "Archivo más grande",
+      "pieTitle": "Distribución del espacio",
+      "topHeaviest": "Top {{n}} más pesados",
+      "typeBreakdown": "Por tipo de archivo",
+      "category": "Categoría",
+      "count": "Cantidad",
+      "other": "Otros"
+    },
     "contents": {
       "emptyFolder": "Esta carpeta está vacía.",
       "colName": "Nombre",

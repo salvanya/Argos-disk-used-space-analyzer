@@ -37,6 +37,20 @@
     "emptyFolders": "Folder tree will appear here after scan.",
     "emptyContents": "Select a folder to see its contents.",
     "emptyInsights": "Charts and insights will appear here.",
+    "insights": {
+      "noData": "Select a folder to see insights.",
+      "summary": "Summary",
+      "totalSize": "Total size",
+      "files": "Files",
+      "folders": "Folders",
+      "largestFile": "Largest file",
+      "pieTitle": "Space breakdown",
+      "topHeaviest": "Top {{n}} heaviest",
+      "typeBreakdown": "By file type",
+      "category": "Category",
+      "count": "Count",
+      "other": "Other"
+    },
     "contents": {
       "emptyFolder": "This folder is empty.",
       "colName": "Name",
