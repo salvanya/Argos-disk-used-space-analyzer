@@ -1,20 +1,25 @@
-# Current State — 2026-04-18
-
 ## In Progress
-None. M11 shipped.
+None. M12 shipped.
 
 ## Last Completed
-- Commit 71760e0 `feat(m11): polish pass — lazy 3D, empty/error states, a11y, motion`.
-- 163/163 tests pass; tsc -b clean; vite build clean.
-- Bundle: Three.js split into `graph3d` chunk (1.4 MB / 381 KB gz); main `index` 744 KB / 232 KB gz.
+- WS1: `feat(backend): scanner exclusions (fnmatch globs)` — 650ae40
+- WS2: `feat(backend): bulk cache clear endpoint` — aea953d
+- WS3: `feat(backend): relaunch-admin endpoint` — ad60801
+- WS4: `feat(frontend): admin badge + relaunch button`
+- WS5: `feat(frontend): settings drawer — scan options, exclusions, cache`
+- Backend 111 pass / 4 skipped (symlink tests on Windows); Frontend 197/197; tsc -b clean; vite build clean.
 
 ## Next Step
-Start M12 — admin relaunch flow + advanced settings (CLAUDE.md §10). Recommended entry: `/spec M12` to scope.
+Project milestones complete (M0–M12 per CLAUDE.md §10). Candidate follow-ups:
+- Lazy-load InsightsPanel (Recharts) to drop main bundle below 500 KB.
+- Real-world scan benchmark on a 500k+ file tree; decide whether multiprocessing is warranted.
+- Packaging story beyond `python main.py` (explicit out-of-scope per §11 but may revisit).
 
 ## Open Questions
-- Main bundle is 744 KB, above the 500 KB stretch target in M11 plan. Recharts is the main offender. Decide in M12+ whether to lazy-load InsightsPanel too.
+- None blocking.
 
 ## Files Worth Reloading Next Session
-- `specs/m11-polish/` — finished reference
-- `backend/core/windows_utils.py` — M12 will touch admin detection + UAC elevation
-- CLAUDE.md §6.6 (admin privileges) and §10 (milestones)
+- `specs/m12-admin-settings/` — spec + plan reference
+- `frontend/src/components/explorer/settings/` — drawer + sections
+- `backend/api/system.py` — relaunch endpoint with threading.Timer shutdown
+- CLAUDE.md §10 (milestones) — all shipped

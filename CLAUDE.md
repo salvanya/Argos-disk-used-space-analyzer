@@ -33,7 +33,6 @@
 - Theme toggle (light / dark)
 - Language toggle (English / Spanish)
 - Toggle: include hidden/system files
-- Toggle: follow symlinks (default: OFF)
 - View mode switcher (Columns view ↔ 3D Graph view)
 - Settings panel (advanced scan options, exclusions, cache management)
 - Rescan button (forces re-scan, bypasses cache)
