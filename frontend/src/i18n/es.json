@@ -64,7 +64,9 @@
       "tree": "Árbol de carpetas",
       "contents": "Contenido de la carpeta",
       "insights": "Panel de estadísticas",
-      "topMenu": "Controles del explorador"
+      "topMenu": "Controles del explorador",
+      "resizeLeft": "Redimensionar panel de carpetas",
+      "resizeRight": "Redimensionar panel de análisis"
     },
     "insights": {
       "noData": "Selecciona una carpeta para ver estadísticas.",

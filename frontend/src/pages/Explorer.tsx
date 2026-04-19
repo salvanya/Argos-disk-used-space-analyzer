@@ -1,13 +1,22 @@
 import { lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { RequireScan } from "../components/explorer/RequireScan";
 import { TopMenuBar } from "../components/explorer/TopMenuBar";
 import { SettingsDrawer } from "../components/explorer/settings/SettingsDrawer";
 import { Footer } from "../components/layout/Footer";
+import { ResizeHandle } from "../components/layout/ResizeHandle";
 import { FolderTreePanel } from "../components/explorer/columns/FolderTreePanel";
 import { ContentsPanel } from "../components/explorer/columns/ContentsPanel";
 import { InsightsPanel } from "../components/explorer/columns/InsightsPanel";
 import { useExplorerStore } from "../stores/explorerStore";
+import {
+  useColumnWidthsStore,
+  LEFT_MIN,
+  LEFT_MAX,
+  RIGHT_MIN,
+  RIGHT_MAX,
+} from "../stores/columnWidthsStore";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 
 const Graph3DView = lazy(() =>
@@ -18,9 +27,18 @@ function ColumnsLayout() {
   const reduce = usePrefersReducedMotion();
   const stagger = reduce ? 0 : 0.06;
   const duration = reduce ? 0 : 0.3;
+  const { t } = useTranslation();
+  const left = useColumnWidthsStore((s) => s.left);
+  const right = useColumnWidthsStore((s) => s.right);
+  const setLeft = useColumnWidthsStore((s) => s.setLeft);
+  const setRight = useColumnWidthsStore((s) => s.setRight);
+  const fadeVariants = {
+    hidden: { opacity: 0, y: reduce ? 0 : 8 },
+    visible: { opacity: 1, y: 0, transition: { duration } },
+  };
   return (
     <motion.div
-      className="flex min-h-0 flex-1 gap-2 p-2"
+      className="flex min-h-0 flex-1 p-2"
       initial="hidden"
       animate="visible"
       variants={{
@@ -28,28 +46,31 @@ function ColumnsLayout() {
         visible: { transition: { staggerChildren: stagger } },
       }}
     >
-      {[
-        <FolderTreePanel key="tree" />,
-        <ContentsPanel key="contents" />,
-        <InsightsPanel key="insights" />,
-      ].map((node, i) => (
-        <motion.div
-          key={node.key}
-          variants={{
-            hidden: { opacity: 0, y: reduce ? 0 : 8 },
-            visible: { opacity: 1, y: 0, transition: { duration } },
-          }}
-          className={
-            i === 0
-              ? "w-60 flex-shrink-0"
-              : i === 1
-                ? "min-w-0 flex-1"
-                : "w-80 flex-shrink-0"
-          }
-        >
-          {node}
-        </motion.div>
-      ))}
+      <motion.div variants={fadeVariants} style={{ width: left }} className="shrink-0">
+        <FolderTreePanel />
+      </motion.div>
+      <ResizeHandle
+        current={left}
+        onChange={setLeft}
+        min={LEFT_MIN}
+        max={LEFT_MAX}
+        ariaLabel={t("explorer.a11y.resizeLeft")}
+        fromLeft
+      />
+      <motion.div variants={fadeVariants} className="min-w-0 flex-1">
+        <ContentsPanel />
+      </motion.div>
+      <ResizeHandle
+        current={right}
+        onChange={setRight}
+        min={RIGHT_MIN}
+        max={RIGHT_MAX}
+        ariaLabel={t("explorer.a11y.resizeRight")}
+        fromLeft={false}
+      />
+      <motion.div variants={fadeVariants} style={{ width: right }} className="shrink-0">
+        <InsightsPanel />
+      </motion.div>
     </motion.div>
   );
 }

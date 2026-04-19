@@ -65,7 +65,9 @@
       "tree": "Folder tree",
       "contents": "Folder contents",
       "insights": "Insights panel",
-      "topMenu": "Explorer controls"
+      "topMenu": "Explorer controls",
+      "resizeLeft": "Resize folders panel",
+      "resizeRight": "Resize insights panel"
     },
     "insights": {
       "noData": "Select a folder to see insights.",
