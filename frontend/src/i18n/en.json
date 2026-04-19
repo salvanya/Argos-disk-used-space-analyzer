@@ -161,5 +161,8 @@
       "children": "Children"
     },
     "downsampledNotice": "Large tree — {{count}} deep items aggregated for performance."
+  },
+  "footer": {
+    "createdBy": "created by"
   }
 }

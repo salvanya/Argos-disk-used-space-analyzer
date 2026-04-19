@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Header } from "../components/layout/Header";
+import { Footer } from "../components/layout/Footer";
 import { FolderPicker } from "../components/home/FolderPicker";
 import { RecentScans } from "../components/home/RecentScans";
 import { ScanProgress } from "../components/home/ScanProgress";
@@ -102,6 +103,8 @@ export function Home() {
           </div>
         </motion.div>
       </main>
+
+      <Footer />
     </div>
   );
 }

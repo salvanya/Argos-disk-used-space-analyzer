@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { RequireScan } from "../components/explorer/RequireScan";
 import { TopMenuBar } from "../components/explorer/TopMenuBar";
 import { SettingsDrawer } from "../components/explorer/settings/SettingsDrawer";
+import { Footer } from "../components/layout/Footer";
 import { FolderTreePanel } from "../components/explorer/columns/FolderTreePanel";
 import { ContentsPanel } from "../components/explorer/columns/ContentsPanel";
 import { InsightsPanel } from "../components/explorer/columns/InsightsPanel";
@@ -88,6 +89,7 @@ function ExplorerLayout() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Footer />
     </div>
   );
 }
