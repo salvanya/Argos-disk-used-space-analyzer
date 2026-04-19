@@ -18,6 +18,7 @@ import { ContentsRow } from "./ContentsRow";
 import { ContextMenu } from "./ContextMenu";
 import { PropertiesModal } from "./PropertiesModal";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
+import { GroupBySelect } from "../../../ui/GroupBySelect";
 import { openInExplorer, deleteItem } from "../../../../lib/api";
 import type { ScanNode } from "../../../../lib/types";
 import { cn } from "../../../../lib/utils";
@@ -164,14 +165,14 @@ export function ContentsTable() {
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header controls */}
       <div className="flex shrink-0 items-center gap-2 border-b border-canvas-border px-3 py-1.5">
-        <select
-          className="rounded bg-canvas-hover px-2 py-0.5 text-xs text-fg-secondary outline-none"
+        <GroupBySelect
           value={groupMode}
-          onChange={(e) => setGroupMode(e.target.value as GroupMode)}
-        >
-          <option value="none">{t("explorer.contents.noGrouping")}</option>
-          <option value="type">{t("explorer.contents.groupByType")}</option>
-        </select>
+          onChange={(v) => setGroupMode(v as GroupMode)}
+          options={[
+            { value: "none", label: t("explorer.contents.noGrouping") },
+            { value: "type", label: t("explorer.contents.groupByType") },
+          ]}
+        />
         <button
           role="button"
           aria-label={t("explorer.contents.colName")}

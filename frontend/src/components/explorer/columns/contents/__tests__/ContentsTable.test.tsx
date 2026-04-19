@@ -260,12 +260,10 @@ describe("ContentsTable", () => {
 
     it("group-by selector precedes the Name sort button in DOM order", () => {
       renderWithItems();
-      const selects = document.querySelectorAll("select");
-      expect(selects.length).toBe(1);
-      const groupby = selects[0];
+      const combobox = screen.getByRole("combobox");
       const nameBtn = screen.getByRole("button", { name: /name/i });
       expect(
-        groupby.compareDocumentPosition(nameBtn) & Node.DOCUMENT_POSITION_FOLLOWING,
+        combobox.compareDocumentPosition(nameBtn) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     });
   });
