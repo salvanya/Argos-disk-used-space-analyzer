@@ -14,7 +14,6 @@ from backend.app import create_app
 from fastapi import FastAPI
 from httpx import ASGITransport
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

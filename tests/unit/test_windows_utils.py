@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import ctypes
-import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from backend.core.windows_utils import is_admin, is_hidden, is_link, is_system_file, open_in_explorer
+from backend.core.windows_utils import (
+    is_admin,
+    is_hidden,
+    is_link,
+    is_system_file,
+    open_in_explorer,
+)
 
 # ---------------------------------------------------------------------------
 # is_link

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -126,35 +126,21 @@ class ScanStartRequest(BaseModel):
 
 
 class ScanSummary(BaseModel):
-    """Flat summary returned by GET /api/scans (no tree blob)."""
+    """One row of ``GET /api/scans`` — the freshest cached root-level scan.
+
+    Under M14 each ``root_path`` is summarised by its **own** level scan (the
+    row where ``folder_path == root_path``). Counts and bytes describe direct
+    children only, matching :class:`LevelScanResult` semantics.
+    """
 
     root_path: str
     scanned_at: datetime
-    total_files: int
-    total_folders: int
-    total_size: int
+    options_hash: str
+    direct_files: int
+    direct_folders: int
+    direct_bytes_known: int
     error_count: int
     duration_seconds: float
-
-
-# ---------------------------------------------------------------------------
-# WebSocket message envelope — discriminated union on the `type` field
-# ---------------------------------------------------------------------------
-
-
-class WsProgressMessage(BaseModel):
-    type: Literal["progress"] = "progress"
-    node_count: int
-
-
-class WsCompleteMessage(BaseModel):
-    type: Literal["complete"] = "complete"
-    result: ScanResult
-
-
-class WsErrorMessage(BaseModel):
-    type: Literal["error"] = "error"
-    message: str
 
 
 # ---------------------------------------------------------------------------
