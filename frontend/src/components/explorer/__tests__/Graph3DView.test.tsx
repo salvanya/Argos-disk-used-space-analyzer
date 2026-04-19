@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { Graph3DView } from "../graph3d/Graph3DView";
 import { useScanStore } from "../../../stores/scanStore";
 import { useExplorerStore } from "../../../stores/explorerStore";
+import { nodeRadius } from "../graph3d/graphData";
 import type { ScanResult } from "../../../lib/types";
 
 function makeResult(nodeCount = 3): ScanResult {
@@ -79,5 +80,20 @@ describe("Graph3DView", () => {
     useScanStore.setState({ result: makeResult(3), status: "done" });
     render(<Graph3DView />);
     expect(screen.queryByText(/graph3d\.downsampledNotice/)).not.toBeInTheDocument();
+  });
+
+  it("passes nodeVal = radius**3 so visual radius is proportional to size (M13 spec §6)", () => {
+    useScanStore.setState({ result: makeResult(3), status: "done" });
+    render(<Graph3DView />);
+    // react-force-graph-3d treats nodeVal as VOLUME (internal cbrt → radius).
+    // We want the visible radius to equal our log-scaled `nodeRadius(size)`,
+    // so nodeVal must be r**3 so the library recovers r via cube-root.
+    const rootBtn = screen.getByTestId("graph-node-/root");
+    const expectedRoot = nodeRadius(1000) ** 3;
+    expect(Number(rootBtn.getAttribute("data-nodeval"))).toBeCloseTo(expectedRoot, 2);
+
+    const fileBtn = screen.getByTestId("graph-node-/root/file0");
+    const expectedFile = nodeRadius(100) ** 3;
+    expect(Number(fileBtn.getAttribute("data-nodeval"))).toBeCloseTo(expectedFile, 2);
   });
 });

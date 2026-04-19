@@ -52,7 +52,7 @@ export function Graph3DView() {
         height={dims.h || undefined}
         backgroundColor={bg}
         nodeRelSize={1}
-        nodeVal={(n: GraphNode) => n.radius}
+        nodeVal={(n: GraphNode) => n.radius ** 3}
         nodeColor={(n: GraphNode) => n.color}
         nodeLabel={(n: GraphNode) => n.name}
         linkColor={() => (theme === "dark" ? "rgba(148,163,184,0.25)" : "rgba(71,85,105,0.3)")}

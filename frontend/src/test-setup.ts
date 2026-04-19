@@ -40,6 +40,7 @@ vi.mock("react-force-graph-3d", () => {
     unknown,
     {
       graphData?: { nodes: Array<{ id: string }>; links: Array<{ source: string; target: string }> };
+      nodeVal?: (node: { id: string }) => number;
       onNodeClick?: (node: { id: string }) => void;
       onNodeHover?: (node: { id: string } | null) => void;
     }
@@ -53,6 +54,7 @@ vi.mock("react-force-graph-3d", () => {
           {
             key: n.id,
             "data-testid": `graph-node-${n.id}`,
+            "data-nodeval": props.nodeVal?.(n),
             onClick: () => props.onNodeClick?.(n),
             onMouseEnter: () => props.onNodeHover?.(n),
             onMouseLeave: () => props.onNodeHover?.(null),
