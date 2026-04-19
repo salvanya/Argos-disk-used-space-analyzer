@@ -9,12 +9,12 @@ The current scanner (`backend/core/scanner.DiskScanner.scan`) walks the entire s
 CLAUDE.md §2.4 mandates "Complete scan (not lazy/progressive)", but that requirement predates real-world testing on large disks — the user has now hit the pain and wants lazy scanning instead. This spec documents that reversal and defines the new scanning model.
 
 ## Goals
-- The initial scan of a root returns only the **direct children** (files + folders) of that root, each with a known size — for folder children, "known size" requires deciding between a shallow-immediate return (size unknown until drilled into) and a deep-but-deferred return (size computed recursively per child folder before it shows up). See Open Questions.
+- The initial scan of a root returns only the **direct children** (files + folders) of that root. File children have a known size (from `stat`); folder children are returned as stubs with unknown size (pure-lazy model — see Resolutions §1). A folder child's size becomes known only when that folder is itself `scan_level`'d.
 - Expanding a folder (in the tree on the left, or clicking/focusing it in the middle column, or clicking a sphere in the 3D view) triggers a per-folder scan of its direct children — not a full subtree walk.
 - Percentages displayed in the tree, middle column, and insights are computed relative to the currently-known siblings at that level; they update as more levels are scanned.
 - The SQLite cache stores per-folder partial results, keyed by absolute path, with an "expanded-at" timestamp so stale partial results can be re-fetched.
 - Rescan invalidates the per-folder cache for the target path and (optionally) all its descendants.
-- The API gains a new endpoint for per-folder scans; the existing full-scan endpoint is either deprecated, kept as a "scan this subtree fully" opt-in, or replaced entirely — see Open Questions.
+- The API gains a new endpoint for per-folder scans; the existing full-scan endpoint is removed (see Resolutions §2).
 - WebSocket progress continues to work for any in-flight per-folder scan.
 
 ## Non-Goals
@@ -34,10 +34,10 @@ CLAUDE.md §2.4 mandates "Complete scan (not lazy/progressive)", but that requir
 ## Acceptance Criteria
 
 ### Scanner core
-- A new (or renamed) `DiskScanner.scan_level(path, options) -> LevelScanResult` returns: the path itself, its direct children (files + folders), per-child size (see Open Question 1), flags for symlink / accessible / hidden-or-system, and aggregate stats for this level only (`direct_files`, `direct_folders`, `direct_bytes_known`).
-- The scanner never descends below the requested level when `scan_level` is called (except as required by Open Question 1's chosen resolution).
+- A new `DiskScanner.scan_level(path, options) -> LevelScanResult` returns: the path itself, its direct children (files + folders), per-file size from `stat`, folder children with `size=None` (pure-lazy — populated only when that folder is itself `scan_level`'d), flags for symlink / accessible / hidden-or-system, and aggregate stats for this level only (`direct_files`, `direct_folders`, `direct_bytes_known`).
+- The scanner never descends below the requested level when `scan_level` is called.
 - All existing safety guarantees (symlink detection, permission handling, exclusion globs from M12) are preserved.
-- `DiskScanner.scan` (full subtree) remains available and unchanged for use cases that still want a full walk (tests, benchmarks, or an optional "deep-scan this folder" user action).
+- `DiskScanner.scan` (full subtree) remains available and unchanged in core for tests, benchmarks, or an optional future "deep-scan this folder" feature; it is no longer wired to any HTTP endpoint.
 
 ### Cache
 - The `ScanCache` schema adds (or repurposes) a per-folder row keyed by `(root_path, folder_path)` with `children_json`, `scanned_at`, `options_hash`.
@@ -48,9 +48,9 @@ CLAUDE.md §2.4 mandates "Complete scan (not lazy/progressive)", but that requir
 
 ### API
 - `POST /api/scan/level` with body `{ path: string, options: ScanOptions }` returns a `LevelScanResult`. Cached results are returned when fresh; otherwise a fresh scan runs and is cached.
-- `GET /api/scan/level?path=...` is an alias for the common cached-read path (TBD, per REST taste — see Open Questions).
+- `GET /api/scan/level?path=...` is an alias for the common cached-read path (TBD, per REST taste — see Resolutions §9).
 - WebSocket `/ws/scan` continues to stream progress for the currently-running per-folder scan.
-- The existing `POST /api/scan` is either (a) kept as "full subtree scan" for opt-in, (b) routed internally to `scan_level(root)` for backwards compatibility, or (c) removed. Resolution in Open Questions.
+- The existing `POST /api/scan` is **removed**. Full-subtree scanning remains available via `DiskScanner.scan()` in core (tests/benchmarks). If a user-facing deep-scan becomes desirable later, a distinct `POST /api/scan/deep` will be added at that time.
 
 ### Frontend — tree
 - On scan start, the tree renders only the root + its direct children.
@@ -75,26 +75,27 @@ CLAUDE.md §2.4 mandates "Complete scan (not lazy/progressive)", but that requir
 - Backward-compat regression (if `POST /api/scan` kept): existing full-scan tests still pass.
 - Coverage on `backend/core/` stays ≥ 85 %.
 
-## Open Questions (MUST resolve before plan.md / tasks.md)
+## Resolutions
 
-1. **Flavor — pure lazy vs. lazy-first + background refine?**
-   - (a) **Pure lazy:** child folder sizes are unknown until that child is itself expanded. Top-level totals are lower bounds. Fastest first paint, simplest cache model.
-   - (b) **Lazy-first + background refine:** first response is fast (known *direct* children + their sizes computed via a shallow recursive walk per child folder — still orders of magnitude cheaper than full-tree), and a background task continues walking deeper to refine the numbers the user already sees. Requires a progressive-update channel (WebSocket) and a UI story for "this number is approximate / still refining".
-   - **User must pick before implementation.** The previous conversation left this unresolved.
+All open questions from the pre-planning conversation were resolved on 2026-04-19 before `/plan`. Recorded here as a decision log for the spec.
 
-2. **Fate of `POST /api/scan`:** keep as opt-in full-scan? Route to `scan_level(root)` for back-compat? Remove entirely? Default proposal: **route to `scan_level(root)` for back-compat**, and add a distinct `POST /api/scan/deep` if/when an opt-in full-scan is needed.
+1. **Flavor — pure lazy vs. lazy-first + background refine?** → **(a) Pure lazy.** Folder child sizes are unknown (`None`) until that folder is itself `scan_level`'d. Top-level totals are lower bounds. Fastest first paint, simplest cache model, no background refine channel needed. The UI must clearly render "not yet scanned" folders.
 
-3. **Percentage semantics when siblings are partially unknown:** show "—" for unknown, or show "≥ X %" using known-size as a lower bound? Default proposal: **"—" with a tooltip "not yet scanned"** — simpler and less misleading.
+2. **Fate of `POST /api/scan`?** → **Removed.** The endpoint is deleted rather than aliased to `scan_level(root)`. Reasoning: the frontend is being rewritten in the same commit series, so back-compat buys nothing and a surviving full-scan endpoint re-introduces the exact latency pain M14 is fixing. `DiskScanner.scan()` stays in core for tests/benchmarks. If a user-facing "deep-scan this folder" surfaces later, it becomes `POST /api/scan/deep` at that time (YAGNI).
 
-4. **Cache staleness TTL:** never expire automatically (only on user rescan), or expire after N minutes to catch external filesystem changes? Default proposal: **never expire**; user triggers rescan.
+3. **Percentage semantics when siblings are partially unknown?** → **"—" with tooltip "not yet scanned".** Simpler and less misleading than a "≥ X %" lower bound. Bar visualizations collapse to zero width for unknown siblings.
 
-5. **Rescan granularity from the UI:** rescan-whole-root (current behaviour) only, or also rescan-this-folder (invalidates one partial)? Default proposal: **both**, with the latter as a right-click menu action on tree nodes.
+4. **Cache staleness TTL?** → **Never expire automatically.** Invalidation happens only on user rescan (whole-root or per-folder).
 
-6. **CLAUDE.md §2.4 update:** the "Complete scan (not lazy/progressive)" line must be rewritten to reflect the new model. This is a doc-only task but must land in the same commit series as the code.
+5. **Rescan granularity from the UI?** → **Both.** Whole-root rescan keeps its existing top-menu button; per-folder rescan is a right-click menu action on tree nodes (invalidates that folder's partial + descendants).
 
-7. **Interaction with exclusions (M12):** exclusions apply per-level scan — same semantics, no special handling. Confirm.
+6. **CLAUDE.md §2.4 update?** → In scope for the M14 commit series. The "Complete scan (not lazy/progressive)" line is rewritten to describe the pure-lazy model. Doc-only, but must land alongside the code or the project instructions contradict the behaviour.
 
-8. **Interaction with admin elevation (M12):** per-level scans in an elevated process should read protected folders that were previously 403s; confirm no special handling needed (elevation affects the whole process, not individual scans).
+7. **Interaction with exclusions (M12)?** → **No special handling.** Exclusion globs from the settings panel apply per level-scan identically to how they applied per full-scan. Tests cover this.
+
+8. **Interaction with admin elevation (M12)?** → **No special handling.** Elevation is a process-level state; a per-level scan inherits it. Folders that return 403 in non-admin return data in admin, at every level, automatically.
+
+9. **`GET /api/scan/level` alias?** → **Defer.** Ship `POST /api/scan/level` only. Add a GET alias only if a read-only UX need emerges (e.g., shareable deep-links); not a blocker for M14.
 
 ## Dependencies
 - M12 (admin + settings + exclusions) is already shipped and this spec assumes it.
