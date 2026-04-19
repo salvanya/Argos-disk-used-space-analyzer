@@ -5,6 +5,7 @@
 - [0002: Never follow symlinks](decisions/0002-do-not-follow-symlinks.md) — Symlinks excluded from size totals, shown with icon
 - [0003: Synchronous scanner](decisions/0003-synchronous-scanner.md) — asyncio walkdir benchmarked slower than sync os.walk on Windows
 - [0004: No-auth config bootstrap](decisions/0004-no-auth-config-bootstrap.md) — App config (token) fetched once on mount, not baked into HTML
+- [0005: Lazy scanning over full-tree scan](decisions/0005-lazy-scanning-over-full-scan.md) — Per-level on-demand scans; reverses CLAUDE.md §2.4. Flavor TBD in M14.
 
 ## Lessons
 - [rtl i18n key regex](lessons/rtl-i18n-key-regex.md) — Regexes with spaces (e.g. /copy path/i) won't match camelCase i18n keys; use /copypath/i
