@@ -16,9 +16,40 @@ import { useAppStore } from "../../stores/appStore";
 import { useExplorerStore } from "../../stores/explorerStore";
 import { useScanStore } from "../../stores/scanStore";
 import { useSettingsStore } from "../../stores/settingsStore";
-import { connectScanWs } from "../../lib/api";
+import { invalidateLevel, scanLevel } from "../../lib/api";
+import type { LevelScanResult, ScanResult } from "../../lib/types";
 import { AdminBadge } from "./AdminBadge";
 import { RelaunchAdminButton } from "./RelaunchAdminButton";
+
+function levelToLegacyResult(level: LevelScanResult): ScanResult {
+  return {
+    root: {
+      name: level.folderPath.split(/[\\/]/).pop() ?? level.folderPath,
+      path: level.folderPath,
+      node_type: "folder",
+      size: level.directBytesKnown,
+      accessible: level.accessible,
+      is_link: level.isLink,
+      link_target: null,
+      children: level.children.map((c) => ({
+        name: c.name,
+        path: c.path,
+        node_type: c.nodeType,
+        size: c.size ?? 0,
+        accessible: c.accessible,
+        is_link: c.isLink,
+        link_target: c.linkTarget,
+        children: [],
+      })),
+    },
+    scanned_at: level.scannedAt,
+    duration_seconds: level.durationSeconds,
+    total_files: level.directFiles,
+    total_folders: level.directFolders,
+    total_size: level.directBytesKnown,
+    error_count: level.errorCount,
+  };
+}
 
 function MenuButton({
   label,
@@ -63,8 +94,7 @@ export function TopMenuBar() {
   const { theme, locale, setTheme, setLocale } = useAppStore();
   const { viewMode, showHidden, setViewMode, toggleHidden, setSettingsOpen } =
     useExplorerStore();
-  const { status, selectedPath, startScan, updateProgress, completeScan, failScan } =
-    useScanStore();
+  const { status, selectedPath, startScan, completeScan, failScan } = useScanStore();
 
   const isScanning = status === "scanning";
 
@@ -82,22 +112,26 @@ export function TopMenuBar() {
     void i18n.changeLanguage(next);
   }
 
-  function handleRescan() {
+  async function handleRescan(): Promise<void> {
     if (!selectedPath || isScanning) return;
     startScan();
     const { include_hidden, include_system, exclude } = useSettingsStore.getState();
-    const ws = connectScanWs(
-      useAppStore.getState().token,
-      selectedPath,
-      true,
-      (msg) => {
-        if (msg.type === "progress") updateProgress(msg.node_count);
-        else if (msg.type === "complete") { completeScan(msg.result); ws.close(); }
-        else if (msg.type === "error") failScan(msg.message);
-      },
-      () => {},
-      { include_hidden, include_system, exclude },
-    );
+    try {
+      await invalidateLevel(selectedPath, selectedPath, true);
+      const level = await scanLevel(
+        selectedPath,
+        selectedPath,
+        { include_hidden, include_system, exclude },
+        true,
+      );
+      useScanStore.setState((s) => ({
+        root: selectedPath,
+        levels: { ...s.levels, [selectedPath]: level },
+      }));
+      completeScan(levelToLegacyResult(level));
+    } catch (err) {
+      failScan(err instanceof Error ? err.message : String(err));
+    }
   }
 
   return (
@@ -115,7 +149,9 @@ export function TopMenuBar() {
       {/* Scan controls */}
       <MenuButton
         label={t("explorer.rescan")}
-        onClick={handleRescan}
+        onClick={() => {
+          void handleRescan();
+        }}
         disabled={isScanning}
       >
         <RefreshCw size={14} className={isScanning ? "animate-spin" : ""} />

@@ -7,18 +7,45 @@ import { Footer } from "../components/layout/Footer";
 import { FolderPicker } from "../components/home/FolderPicker";
 import { RecentScans } from "../components/home/RecentScans";
 import { ScanProgress } from "../components/home/ScanProgress";
-import { connectScanWs, listScans } from "../lib/api";
-import type { ScanSummary } from "../lib/types";
-import { useAppStore } from "../stores/appStore";
+import { invalidateLevel, listScans, scanLevel } from "../lib/api";
+import type { LevelScanResult, ScanResult, ScanSummary } from "../lib/types";
 import { useScanStore } from "../stores/scanStore";
 import { useSettingsStore } from "../stores/settingsStore";
+
+function levelToLegacyResult(level: LevelScanResult): ScanResult {
+  return {
+    root: {
+      name: level.folderPath.split(/[\\/]/).pop() ?? level.folderPath,
+      path: level.folderPath,
+      node_type: "folder",
+      size: level.directBytesKnown,
+      accessible: level.accessible,
+      is_link: level.isLink,
+      link_target: null,
+      children: level.children.map((c) => ({
+        name: c.name,
+        path: c.path,
+        node_type: c.nodeType,
+        size: c.size ?? 0,
+        accessible: c.accessible,
+        is_link: c.isLink,
+        link_target: c.linkTarget,
+        children: [],
+      })),
+    },
+    scanned_at: level.scannedAt,
+    duration_seconds: level.durationSeconds,
+    total_files: level.directFiles,
+    total_folders: level.directFolders,
+    total_size: level.directBytesKnown,
+    error_count: level.errorCount,
+  };
+}
 
 export function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const token = useAppStore((s) => s.token);
-  const { status, selectedPath, startScan, updateProgress, completeScan, failScan } =
-    useScanStore();
+  const { status, selectedPath, startScan, completeScan, failScan } = useScanStore();
   const [recentScans, setRecentScans] = useState<ScanSummary[]>([]);
 
   useEffect(() => {
@@ -27,36 +54,38 @@ export function Home() {
       .catch(() => {});
   }, []);
 
-  function triggerScan(path: string, forceRescan: boolean) {
+  async function triggerScan(path: string, forceRescan: boolean): Promise<void> {
     startScan();
     const { include_hidden, include_system, exclude } = useSettingsStore.getState();
-    const ws = connectScanWs(
-      token,
-      path,
-      forceRescan,
-      (msg) => {
-        if (msg.type === "progress") {
-          updateProgress(msg.node_count);
-        } else if (msg.type === "complete") {
-          completeScan(msg.result);
-          ws.close();
-          navigate("/explorer");
-        } else if (msg.type === "error") {
-          failScan(msg.message);
-        }
-      },
-      () => {},
-      { include_hidden, include_system, exclude },
-    );
+    try {
+      if (forceRescan) {
+        await invalidateLevel(path, path, true);
+      }
+      const level = await scanLevel(
+        path,
+        path,
+        { include_hidden, include_system, exclude },
+        forceRescan,
+      );
+      useScanStore.setState((s) => ({
+        root: path,
+        selectedPath: path,
+        levels: { ...s.levels, [path]: level },
+      }));
+      completeScan(levelToLegacyResult(level));
+      navigate("/explorer");
+    } catch (err) {
+      failScan(err instanceof Error ? err.message : String(err));
+    }
   }
 
   function handleScan() {
     if (!selectedPath) return;
-    triggerScan(selectedPath, false);
+    void triggerScan(selectedPath, false);
   }
 
   function handleOpenRecent(scan: ScanSummary) {
-    triggerScan(scan.root_path, false);
+    void triggerScan(scan.root_path, false);
   }
 
   const canScan = !!selectedPath && status !== "scanning";

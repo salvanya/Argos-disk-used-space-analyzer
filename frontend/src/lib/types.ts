@@ -14,9 +14,10 @@ export interface FolderPickerResponse {
 export interface ScanSummary {
   root_path: string;
   scanned_at: string;
-  total_files: number;
-  total_folders: number;
-  total_size: number;
+  options_hash: string;
+  direct_files: number;
+  direct_folders: number;
+  direct_bytes_known: number;
   error_count: number;
   duration_seconds: number;
 }
@@ -42,7 +43,27 @@ export interface ScanResult {
   error_count: number;
 }
 
-export type WsMessage =
-  | { type: "progress"; node_count: number }
-  | { type: "complete"; result: ScanResult }
-  | { type: "error"; message: string };
+export interface LevelScanNode {
+  name: string;
+  path: string;
+  nodeType: "file" | "folder" | "symlink";
+  size: number | null;
+  accessible: boolean;
+  isLink: boolean;
+  linkTarget: string | null;
+}
+
+export interface LevelScanResult {
+  rootPath: string;
+  folderPath: string;
+  scannedAt: string;
+  durationSeconds: number;
+  accessible: boolean;
+  isLink: boolean;
+  directFiles: number;
+  directFolders: number;
+  directBytesKnown: number;
+  errorCount: number;
+  children: LevelScanNode[];
+  optionsHash: string;
+}

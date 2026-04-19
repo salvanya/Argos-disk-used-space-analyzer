@@ -8,7 +8,21 @@ import { useExplorerStore } from "../../../stores/explorerStore";
 import { useScanStore } from "../../../stores/scanStore";
 
 vi.mock("../../../lib/api", () => ({
-  connectScanWs: vi.fn(() => ({ close: vi.fn(), onopen: null, onmessage: null, onclose: null })),
+  scanLevel: vi.fn().mockResolvedValue({
+    rootPath: "C:/test",
+    folderPath: "C:/test",
+    scannedAt: "2026-04-19T00:00:00Z",
+    durationSeconds: 0.01,
+    accessible: true,
+    isLink: false,
+    directFiles: 0,
+    directFolders: 0,
+    directBytesKnown: 0,
+    errorCount: 0,
+    children: [],
+    optionsHash: "abc",
+  }),
+  invalidateLevel: vi.fn().mockResolvedValue(undefined),
 }));
 
 function renderBar() {
