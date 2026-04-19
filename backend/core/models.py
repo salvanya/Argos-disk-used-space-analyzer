@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class NodeType(StrEnum):
@@ -52,6 +52,66 @@ class ScanResult(BaseModel):
     total_folders: int  # count of NodeType.folder nodes (includes root)
     total_size: int  # == root.size
     error_count: int  # number of nodes with accessible=False
+
+
+# ---------------------------------------------------------------------------
+# M14 lazy-scanning models — one folder, direct children only
+# ---------------------------------------------------------------------------
+
+
+class LevelScanNode(BaseModel):
+    """One direct child produced by :meth:`DiskScanner.scan_level`.
+
+    ``size`` is ``None`` for folders (pure-lazy — size is only known once the
+    folder is itself ``scan_level``'d) and a non-negative ``int`` for files.
+    Symlinks carry ``size=0`` and are never followed.
+    """
+
+    name: str
+    path: str  # absolute, forward-slash normalised
+    node_type: NodeType
+    size: Annotated[int, Field(ge=0)] | None
+    accessible: bool
+    is_link: bool
+    link_target: str | None = None
+
+
+class LevelScanResult(BaseModel):
+    """A single level of a lazy scan — the folder plus its direct children."""
+
+    root_path: str  # the user-picked root this level belongs to
+    folder_path: str  # the specific folder this level describes
+    scanned_at: datetime
+    duration_seconds: float
+    accessible: bool  # False if os.scandir on this folder itself failed
+    is_link: bool  # degenerate case; symlinks normally never become a level target
+    direct_files: int
+    direct_folders: int
+    direct_bytes_known: int  # sum of file-child sizes; folders contribute 0
+    error_count: int  # direct children with accessible=False
+    children: list[LevelScanNode]
+    options_hash: str  # echoed for clients that want to key their own cache
+
+
+class LevelScanRequest(BaseModel):
+    """Body of ``POST /api/scan/level``."""
+
+    root: str
+    path: str
+    options: ScanOptions = ScanOptions()
+    force_rescan: bool = False
+
+
+class LevelInvalidateRequest(BaseModel):
+    """Body of ``DELETE /api/scan/level``.
+
+    Per spec Resolution §5 the default wipes the target plus all descendants;
+    clients opt out with ``recursive=False`` to keep descendants.
+    """
+
+    root: str
+    path: str
+    recursive: bool = True
 
 
 # ---------------------------------------------------------------------------
