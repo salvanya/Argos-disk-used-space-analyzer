@@ -200,6 +200,29 @@ describe("ContentsTable", () => {
     });
   });
 
+  describe("toolbar order", () => {
+    function renderWithItems() {
+      const root: ScanNode = makeFolder("root", 1000, "", [
+        makeFile("alpha.txt", 100),
+      ]);
+      root.path = "/root";
+      useScanStore.setState({ status: "done", result: makeScanResult(root) });
+      useExplorerStore.setState({ focusedPath: "/root" });
+      render(<ContentsTable />);
+    }
+
+    it("group-by selector precedes the Name sort button in DOM order", () => {
+      renderWithItems();
+      const selects = document.querySelectorAll("select");
+      expect(selects.length).toBe(1);
+      const groupby = selects[0];
+      const nameBtn = screen.getByRole("button", { name: /name/i });
+      expect(
+        groupby.compareDocumentPosition(nameBtn) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+  });
+
   describe("context menu", () => {
     function renderWithFile() {
       const root: ScanNode = makeFolder("root", 1000, "", [makeFile("report.pdf", 500)]);

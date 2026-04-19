@@ -164,6 +164,14 @@ export function ContentsTable() {
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header controls */}
       <div className="flex shrink-0 items-center gap-2 border-b border-canvas-border px-3 py-1.5">
+        <select
+          className="rounded bg-canvas-hover px-2 py-0.5 text-xs text-fg-secondary outline-none"
+          value={groupMode}
+          onChange={(e) => setGroupMode(e.target.value as GroupMode)}
+        >
+          <option value="none">{t("explorer.contents.noGrouping")}</option>
+          <option value="type">{t("explorer.contents.groupByType")}</option>
+        </select>
         <button
           role="button"
           aria-label={t("explorer.contents.colName")}
@@ -177,14 +185,6 @@ export function ContentsTable() {
           <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} />
         </button>
         <div className="flex-1" />
-        <select
-          className="rounded bg-canvas-hover px-2 py-0.5 text-xs text-fg-secondary outline-none"
-          value={groupMode}
-          onChange={(e) => setGroupMode(e.target.value as GroupMode)}
-        >
-          <option value="none">{t("explorer.contents.noGrouping")}</option>
-          <option value="type">{t("explorer.contents.groupByType")}</option>
-        </select>
         <button
           role="button"
           aria-label={t("explorer.contents.colSize")}
