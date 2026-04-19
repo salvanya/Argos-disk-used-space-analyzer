@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { render, screen, fireEvent, within, act } from "@testing-library/react";
 
 vi.mock("@tanstack/react-virtual", () => ({
   useVirtualizer: ({
@@ -166,8 +166,16 @@ describe("ContentsTable", () => {
       root.path = "/root";
       useScanStore.setState({ status: "done", result: makeScanResult(root) });
       useExplorerStore.setState({ focusedPath: "/root" });
-      render(<ContentsTable />);
+      return render(<ContentsTable />);
     }
+
+    it("default render sorts by size desc without user interaction", () => {
+      renderWithItems();
+      const rows = screen.getAllByTestId(/^contents-row-/);
+      expect(rows[0]).toHaveAttribute("data-testid", "contents-row-/root/gamma.txt");
+      expect(rows[1]).toHaveAttribute("data-testid", "contents-row-/root/beta.txt");
+      expect(rows[2]).toHaveAttribute("data-testid", "contents-row-/root/alpha.txt");
+    });
 
     it("first click on Name header sorts by name asc", () => {
       renderWithItems();
@@ -184,19 +192,58 @@ describe("ContentsTable", () => {
       expect(rows[0]).toHaveAttribute("data-testid", "contents-row-/root/gamma.txt");
     });
 
-    it("first click on Size header sorts by size desc (largest first)", () => {
+    it("clicking Size header while already size-desc toggles to size-asc", () => {
       renderWithItems();
+      fireEvent.click(screen.getByRole("button", { name: /size/i }));
+      const rows = screen.getAllByTestId(/^contents-row-/);
+      expect(rows[0]).toHaveAttribute("data-testid", "contents-row-/root/alpha.txt");
+    });
+
+    it("double-click on Size header returns to size-desc", () => {
+      renderWithItems();
+      fireEvent.click(screen.getByRole("button", { name: /size/i }));
       fireEvent.click(screen.getByRole("button", { name: /size/i }));
       const rows = screen.getAllByTestId(/^contents-row-/);
       expect(rows[0]).toHaveAttribute("data-testid", "contents-row-/root/gamma.txt");
     });
 
-    it("second click on Size header sorts by size asc (smallest first)", () => {
-      renderWithItems();
-      fireEvent.click(screen.getByRole("button", { name: /size/i }));
-      fireEvent.click(screen.getByRole("button", { name: /size/i }));
-      const rows = screen.getAllByTestId(/^contents-row-/);
+    it("custom sort persists across sibling navigation within session", () => {
+      const root: ScanNode = makeFolder("root", 1000, "", [
+        makeFolder("one", 600, "/root", [
+          makeFile("y.txt", 200, "/root/one"),
+          makeFile("x.txt", 100, "/root/one"),
+        ]),
+        makeFolder("two", 400, "/root", [
+          makeFile("q.txt", 300, "/root/two"),
+          makeFile("p.txt", 50, "/root/two"),
+        ]),
+      ]);
+      root.path = "/root";
+      useScanStore.setState({ status: "done", result: makeScanResult(root) });
+      useExplorerStore.setState({ focusedPath: "/root/one" });
+      render(<ContentsTable />);
+      // Switch to name-asc
+      fireEvent.click(screen.getByRole("button", { name: /name/i }));
+      let rows = screen.getAllByTestId(/^contents-row-/);
+      expect(rows[0]).toHaveAttribute("data-testid", "contents-row-/root/one/x.txt");
+      // Navigate to sibling folder "two"
+      act(() => {
+        useExplorerStore.setState({ focusedPath: "/root/two" });
+      });
+      rows = screen.getAllByTestId(/^contents-row-/);
+      // Still name-asc in the new folder
+      expect(rows[0]).toHaveAttribute("data-testid", "contents-row-/root/two/p.txt");
+    });
+
+    it("unmount/remount resets to size-desc (lifecycle = session boundary)", () => {
+      const { unmount } = renderWithItems();
+      fireEvent.click(screen.getByRole("button", { name: /name/i }));
+      let rows = screen.getAllByTestId(/^contents-row-/);
       expect(rows[0]).toHaveAttribute("data-testid", "contents-row-/root/alpha.txt");
+      unmount();
+      renderWithItems();
+      rows = screen.getAllByTestId(/^contents-row-/);
+      expect(rows[0]).toHaveAttribute("data-testid", "contents-row-/root/gamma.txt");
     });
   });
 

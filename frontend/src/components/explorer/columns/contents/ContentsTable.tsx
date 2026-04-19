@@ -40,8 +40,8 @@ export function ContentsTable() {
   const focusedPath = useExplorerStore((s) => s.focusedPath);
   const setFocusedPath = useExplorerStore((s) => s.setFocusedPath);
 
-  const [sortKey, setSortKey] = useState<SortKey | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [sortKey, setSortKey] = useState<SortKey | null>("size");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [groupMode, setGroupMode] = useState<GroupMode>("none");
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [propertiesNode, setPropertiesNode] = useState<ScanNode | null>(null);
