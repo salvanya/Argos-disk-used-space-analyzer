@@ -367,6 +367,8 @@ Project-specific and imported skills. See each skill's `SKILL.md` for details.
 11. **M10 — 3D graph view**: react-force-graph-3d with proper scaling/colors.
 12. **M11 — Polish**: animations, empty states, error states, accessibility pass.
 13. **M12 — Admin relaunch flow** and advanced settings.
+14. **M13 — UX refinements**: resizable columns, default size-desc sort, toolbar reorder, dark-mode group-by dropdown fix, footer with attribution + MIT license, 3D sphere radius proportional to size. Spec at `specs/m13-ux-refinements/spec.md`.
+15. **M14 — Lazy / on-demand scanning**: per-folder scans on expand instead of full-tree eager walk; reverses §2.4's "complete scan" requirement. Spec at `specs/m14-lazy-scanning/spec.md` (has unresolved open questions — confirm with user before implementing).
 
 ---
 
