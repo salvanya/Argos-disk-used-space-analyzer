@@ -15,6 +15,7 @@ interface ScanState {
   openRoot: (path: string) => Promise<void>;
   ensureLevel: (path: string) => Promise<void>;
   invalidateLevel: (path: string, recursive: boolean) => Promise<void>;
+  rescanRoot: () => Promise<void>;
   closeRoot: () => void;
   setSelectedPath: (path: string) => void;
 
@@ -169,6 +170,24 @@ export const useScanStore = create<ScanState>((set, get) => ({
       }
       return { levels: nextLevels };
     });
+  },
+
+  rescanRoot: async () => {
+    const { root, status } = get();
+    if (!root || status === "scanning") return;
+    set({ status: "scanning", errorMessage: "" });
+    try {
+      await get().invalidateLevel(root, true);
+      await get().ensureLevel(root);
+      const { selectedPath } = get();
+      if (selectedPath && selectedPath !== root) {
+        await get().ensureLevel(selectedPath);
+      }
+      set({ status: "done" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      set({ status: "error", errorMessage: message });
+    }
   },
 
   closeRoot: () =>
