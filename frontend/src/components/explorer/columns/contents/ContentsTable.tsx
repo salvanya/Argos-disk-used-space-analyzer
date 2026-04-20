@@ -1,13 +1,13 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useTranslation } from "react-i18next";
-import { ChevronUp, ChevronDown, ChevronsUpDown, FolderOpen, Inbox } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, FolderOpen, Inbox, Loader2 } from "lucide-react";
 import { EmptyState } from "../../../ui/EmptyState";
 import { ErrorPanel } from "../../../ui/ErrorPanel";
 import { useScanStore } from "../../../../stores/scanStore";
 import { useExplorerStore } from "../../../../stores/explorerStore";
+import { useFocusedLevel } from "../hooks/useFocusedLevel";
 import {
-  getDirectChildren,
   sortItems,
   groupItems,
   type SortKey,
@@ -20,13 +20,13 @@ import { PropertiesModal } from "./PropertiesModal";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { GroupBySelect } from "../../../ui/GroupBySelect";
 import { openInExplorer, deleteItem } from "../../../../lib/api";
-import type { ScanNode } from "../../../../lib/types";
+import type { LevelScanNode } from "../../../../lib/types";
 import { cn } from "../../../../lib/utils";
 
-type ContextMenuState = { x: number; y: number; node: ScanNode };
+type ContextMenuState = { x: number; y: number; node: LevelScanNode };
 type VirtualRow =
   | { kind: "group-header"; label: string }
-  | { kind: "row"; node: ScanNode; parentSize: number };
+  | { kind: "row"; node: LevelScanNode; parentSize: number | null };
 
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey | null; sortDir: SortDir }) {
   if (col !== sortKey) return <ChevronsUpDown size={11} className="text-fg-muted" />;
@@ -37,57 +37,33 @@ function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey | 
 
 export function ContentsTable() {
   const { t } = useTranslation();
-  const result = useScanStore((s) => s.result);
-  const focusedPath = useExplorerStore((s) => s.focusedPath);
   const setFocusedPath = useExplorerStore((s) => s.setFocusedPath);
+  const removeNode = useScanStore((s) => s.removeNode);
+  const { focusedPath, level, isInflight } = useFocusedLevel();
 
   const [sortKey, setSortKey] = useState<SortKey | null>("size");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [groupMode, setGroupMode] = useState<GroupMode>("none");
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
-  const [propertiesNode, setPropertiesNode] = useState<ScanNode | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ScanNode | null>(null);
-  const removeNode = useScanStore((s) => s.removeNode);
+  const [propertiesNode, setPropertiesNode] = useState<LevelScanNode | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<LevelScanNode | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const children = useMemo(() => {
-    if (!result || !focusedPath) return null;
-    return getDirectChildren(result.root, focusedPath);
-  }, [result, focusedPath]);
-
-  const focusedNode = useMemo((): ScanNode | null => {
-    if (!result || !focusedPath) return null;
-    function find(node: ScanNode): ScanNode | null {
-      if (node.path === focusedPath) return node;
-      for (const c of node.children) { const r = find(c); if (r) return r; }
-      return null;
-    }
-    return find(result.root);
-  }, [result, focusedPath]);
-
-  const focusedSize = useMemo(() => {
-    if (!result || !focusedPath) return 0;
-    if (result.root.path === focusedPath) return result.root.size;
-    function find(node: ScanNode): number {
-      if (node.path === focusedPath) return node.size;
-      for (const c of node.children) { const r = find(c); if (r >= 0) return r; }
-      return -1;
-    }
-    return Math.max(0, find(result.root));
-  }, [result, focusedPath]);
-
   const virtualRows = useMemo((): VirtualRow[] => {
-    if (!children) return [];
-    const sorted = sortKey ? sortItems(children, sortKey, sortDir) : children;
+    if (!level) return [];
+    const denominator = level.directBytesKnown;
+    const sorted = sortKey ? sortItems(level.children, sortKey, sortDir) : level.children;
     const groups = groupItems(groupMode, sorted);
     const rows: VirtualRow[] = [];
     for (const group of groups) {
       if (group.label) rows.push({ kind: "group-header", label: group.label });
-      for (const node of group.items) rows.push({ kind: "row", node, parentSize: focusedSize });
+      for (const node of group.items) {
+        rows.push({ kind: "row", node, parentSize: denominator });
+      }
     }
     return rows;
-  }, [children, sortKey, sortDir, groupMode, focusedSize]);
+  }, [level, sortKey, sortDir, groupMode]);
 
   const virtualizer = useVirtualizer({
     count: virtualRows.length,
@@ -105,7 +81,7 @@ export function ContentsTable() {
     }
   }, [sortKey]);
 
-  const handleContextMenu = useCallback((e: React.MouseEvent, node: ScanNode) => {
+  const handleContextMenu = useCallback((e: React.MouseEvent, node: LevelScanNode) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, node });
   }, []);
@@ -134,7 +110,7 @@ export function ContentsTable() {
     [deleteTarget, removeNode],
   );
 
-  if (!focusedPath || !result) {
+  if (!focusedPath) {
     return (
       <div className="flex h-full items-center justify-center">
         <EmptyState icon={FolderOpen} headline={t("explorer.emptyContents")} />
@@ -142,7 +118,26 @@ export function ContentsTable() {
     );
   }
 
-  if (focusedNode && focusedNode.accessible === false) {
+  if (!level) {
+    if (isInflight) {
+      return (
+        <div
+          data-testid="contents-loading"
+          className="flex h-full items-center justify-center text-fg-muted"
+        >
+          <Loader2 size={18} className="animate-spin" aria-hidden />
+          <span className="ml-2 text-xs">{t("tree.scanningFolder")}</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex h-full items-center justify-center">
+        <EmptyState icon={FolderOpen} headline={t("explorer.emptyContents")} />
+      </div>
+    );
+  }
+
+  if (level.accessible === false) {
     return (
       <div className="flex h-full items-center justify-center">
         <ErrorPanel
@@ -153,7 +148,7 @@ export function ContentsTable() {
     );
   }
 
-  if (children !== null && children.length === 0) {
+  if (level.children.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
         <EmptyState icon={Inbox} headline={t("explorer.contents.emptyFolder")} />
@@ -178,7 +173,7 @@ export function ContentsTable() {
           aria-label={t("explorer.contents.colName")}
           className={cn(
             "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors",
-            sortKey === "name" ? "text-fg-primary" : "text-fg-muted hover:text-fg-secondary"
+            sortKey === "name" ? "text-fg-primary" : "text-fg-muted hover:text-fg-secondary",
           )}
           onClick={() => handleSortClick("name")}
         >
@@ -191,7 +186,7 @@ export function ContentsTable() {
           aria-label={t("explorer.contents.colSize")}
           className={cn(
             "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors",
-            sortKey === "size" ? "text-fg-primary" : "text-fg-muted hover:text-fg-secondary"
+            sortKey === "size" ? "text-fg-primary" : "text-fg-muted hover:text-fg-secondary",
           )}
           onClick={() => handleSortClick("size")}
         >

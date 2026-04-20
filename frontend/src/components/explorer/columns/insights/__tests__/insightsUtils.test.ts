@@ -5,50 +5,66 @@ import {
   getSummaryStats,
   getTypeBreakdown,
 } from "../insightsUtils";
-import type { ScanNode } from "../../../../../lib/types";
+import type { LevelScanNode, LevelScanResult } from "../../../../../lib/types";
 
-function makeFile(name: string, size: number, path?: string): ScanNode {
+function makeFile(name: string, size: number | null, path?: string): LevelScanNode {
   return {
     name,
     path: path ?? `/root/${name}`,
-    node_type: "file",
+    nodeType: "file",
     size,
     accessible: true,
-    is_link: false,
-    link_target: null,
-    children: [],
+    isLink: false,
+    linkTarget: null,
   };
 }
 
-function makeFolder(name: string, size: number, path: string, children: ScanNode[] = []): ScanNode {
+function makeFolder(
+  name: string,
+  size: number | null,
+  path: string,
+): LevelScanNode {
   return {
     name,
     path,
-    node_type: "folder",
+    nodeType: "folder",
     size,
     accessible: true,
-    is_link: false,
-    link_target: null,
-    children,
+    isLink: false,
+    linkTarget: null,
   };
 }
 
-const root = makeFolder("root", 1000, "/root", [
-  makeFolder("alpha", 600, "/root/alpha", [
-    makeFolder("deep", 400, "/root/alpha/deep", [
-      makeFolder("deeper", 200, "/root/alpha/deep/deeper", [
-        makeFile("leaf.txt", 200, "/root/alpha/deep/deeper/leaf.txt"),
-      ]),
-    ]),
-    makeFile("a.ts", 200, "/root/alpha/a.ts"),
-  ]),
+function makeLevel(
+  folderPath: string,
+  directBytesKnown: number,
+  children: LevelScanNode[],
+): LevelScanResult {
+  const directFiles = children.filter((c) => c.nodeType === "file").length;
+  const directFolders = children.filter((c) => c.nodeType === "folder").length;
+  return {
+    rootPath: "/root",
+    folderPath,
+    scannedAt: "2026-04-19T00:00:00Z",
+    durationSeconds: 0.01,
+    accessible: true,
+    isLink: false,
+    directFiles,
+    directFolders,
+    directBytesKnown,
+    errorCount: 0,
+    children,
+    optionsHash: "abc",
+  };
+}
+
+const children: LevelScanNode[] = [
+  makeFolder("alpha", 600, "/root/alpha"),
   makeFolder("beta", 200, "/root/beta"),
   makeFile("readme.md", 100, "/root/readme.md"),
   makeFile("archive.zip", 80, "/root/archive.zip"),
   makeFile("photo.jpg", 20, "/root/photo.jpg"),
-]);
-
-const children = root.children; // alpha(600), beta(200), readme.md(100), archive.zip(80), photo.jpg(20)
+];
 
 describe("getPieData", () => {
   it("returns one slice per child, sorted by size desc", () => {
@@ -68,12 +84,12 @@ describe("getPieData", () => {
 
   it("collapses slices beyond maxSlices into Other", () => {
     const many = Array.from({ length: 10 }, (_, i) =>
-      makeFile(`file${i}.txt`, 100 - i)
+      makeFile(`file${i}.txt`, 100 - i),
     );
     const slices = getPieData(many, 5);
     const otherSlice = slices.find((s) => s.name === "Other");
     expect(otherSlice).toBeDefined();
-    expect(slices.length).toBe(6); // 5 top + Other
+    expect(slices.length).toBe(6);
   });
 
   it("does not add Other slice when children <= maxSlices", () => {
@@ -82,10 +98,15 @@ describe("getPieData", () => {
     expect(slices.find((s) => s.name === "Other")).toBeUndefined();
   });
 
-  it("filters out zero-size nodes", () => {
-    const withZero = [makeFile("a.txt", 100), makeFile("empty.txt", 0)];
+  it("filters out zero-size and null-size nodes", () => {
+    const withZero = [
+      makeFile("a.txt", 100),
+      makeFile("empty.txt", 0),
+      makeFile("unknown.txt", null),
+    ];
     const slices = getPieData(withZero);
     expect(slices.find((s) => s.name === "empty.txt")).toBeUndefined();
+    expect(slices.find((s) => s.name === "unknown.txt")).toBeUndefined();
   });
 
   it("returns empty array for empty children", () => {
@@ -124,41 +145,56 @@ describe("getTopN", () => {
   it("returns empty array for empty children", () => {
     expect(getTopN([])).toEqual([]);
   });
+
+  it("treats null sizes as 0 when ranking", () => {
+    const mixed = [makeFile("big", 1000), makeFile("unknown", null), makeFile("small", 10)];
+    const top = getTopN(mixed, 3);
+    expect(top[0].node.name).toBe("big");
+    expect(top[2].node.name).toBe("unknown");
+  });
 });
 
 describe("getSummaryStats", () => {
-  it("counts direct file and folder children", () => {
-    const stats = getSummaryStats(children, root);
-    expect(stats.fileCount).toBe(3); // readme.md, archive.zip, photo.jpg
-    expect(stats.folderCount).toBe(2); // alpha, beta
+  it("reads counts from level.directFiles and level.directFolders", () => {
+    const level = makeLevel("/root", 1000, children);
+    const stats = getSummaryStats(level);
+    expect(stats.fileCount).toBe(3);
+    expect(stats.folderCount).toBe(2);
   });
 
-  it("computes total size as sum of all direct children", () => {
-    const stats = getSummaryStats(children, root);
-    expect(stats.totalSize).toBe(1000); // 600+200+100+80+20
+  it("reads total size from level.directBytesKnown", () => {
+    const level = makeLevel("/root", 1000, children);
+    const stats = getSummaryStats(level);
+    expect(stats.totalSize).toBe(1000);
   });
 
   it("returns the largest file among direct children", () => {
-    const stats = getSummaryStats(children, root);
+    const level = makeLevel("/root", 1000, children);
+    const stats = getSummaryStats(level);
     expect(stats.largestFile?.name).toBe("readme.md");
   });
 
   it("returns null largestFile when no file children", () => {
     const folderOnly = [makeFolder("f1", 100, "/root/f1"), makeFolder("f2", 200, "/root/f2")];
-    const stats = getSummaryStats(folderOnly, root);
+    const level = makeLevel("/root", 300, folderOnly);
+    const stats = getSummaryStats(level);
     expect(stats.largestFile).toBeNull();
   });
 
-  it("finds deepest path via DFS on root", () => {
-    const stats = getSummaryStats(children, root);
-    // deepest = /root/alpha/deep/deeper/leaf.txt (depth 5)
-    expect(stats.deepestPath).toBe("/root/alpha/deep/deeper/leaf.txt");
+  it("ignores null-size files when picking the largest file", () => {
+    const withUnknown = [
+      makeFile("known", 500),
+      makeFile("unknown", null),
+    ];
+    const level = makeLevel("/root", 500, withUnknown);
+    const stats = getSummaryStats(level);
+    expect(stats.largestFile?.name).toBe("known");
   });
 
-  it("returns null deepestPath for a flat root with no children", () => {
-    const flat = makeFolder("flat", 0, "/flat");
-    const stats = getSummaryStats([], flat);
-    expect(stats.deepestPath).toBeNull();
+  it("does not include a deepestPath field (dropped in M14)", () => {
+    const level = makeLevel("/root", 1000, children);
+    const stats = getSummaryStats(level);
+    expect((stats as { deepestPath?: unknown }).deepestPath).toBeUndefined();
   });
 });
 
@@ -172,7 +208,6 @@ describe("getTypeBreakdown", () => {
       makeFile("photo.jpg", 20, "/root/photo.jpg"),
     ];
     const rows = getTypeBreakdown(mixed);
-    // report.pdf→Documents, archive.zip→Archives, photo.jpg→Images
     const labels = rows.map((r) => r.category);
     expect(labels).toContain("Documents");
     expect(labels).toContain("Archives");
@@ -184,7 +219,18 @@ describe("getTypeBreakdown", () => {
     const foldersRow = rows.find((r) => r.category === "Folders");
     expect(foldersRow).toBeDefined();
     expect(foldersRow!.count).toBe(2);
-    expect(foldersRow!.size).toBe(800); // alpha(600) + beta(200)
+    expect(foldersRow!.size).toBe(800);
+  });
+
+  it("treats null sizes as 0", () => {
+    const withUnknown = [
+      makeFile("known.pdf", 100),
+      makeFile("unknown.pdf", null),
+    ];
+    const rows = getTypeBreakdown(withUnknown);
+    const docs = rows.find((r) => r.category === "Documents");
+    expect(docs?.size).toBe(100);
+    expect(docs?.count).toBe(2);
   });
 
   it("each row has a pct between 0 and 1", () => {

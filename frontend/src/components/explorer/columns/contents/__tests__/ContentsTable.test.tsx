@@ -18,64 +18,94 @@ vi.mock("@tanstack/react-virtual", () => ({
   }),
 }));
 
+const scanLevel = vi.fn();
+const invalidateLevel = vi.fn();
+
+vi.mock("../../../../../lib/api", () => ({
+  scanLevel: (...args: unknown[]) => scanLevel(...args),
+  invalidateLevel: (...args: unknown[]) => invalidateLevel(...args),
+  openInExplorer: vi.fn().mockResolvedValue(undefined),
+  deleteItem: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { ContentsTable } from "../ContentsTable";
 import { useScanStore } from "../../../../../stores/scanStore";
 import { useExplorerStore } from "../../../../../stores/explorerStore";
-import type { ScanNode, ScanResult } from "../../../../../lib/types";
+import type { LevelScanNode, LevelScanResult } from "../../../../../lib/types";
 
 function makeFile(
   name: string,
-  size: number,
+  size: number | null,
   parentPath = "/root",
-  opts: Partial<ScanNode> = {}
-): ScanNode {
+  opts: Partial<LevelScanNode> = {},
+): LevelScanNode {
   return {
     name,
     path: `${parentPath}/${name}`,
-    node_type: "file",
+    nodeType: "file",
     size,
     accessible: true,
-    is_link: false,
-    link_target: null,
-    children: [],
+    isLink: false,
+    linkTarget: null,
     ...opts,
   };
 }
 
 function makeFolder(
   name: string,
-  size: number,
+  size: number | null,
   parentPath = "/root",
-  children: ScanNode[] = [],
-  opts: Partial<ScanNode> = {}
-): ScanNode {
+  opts: Partial<LevelScanNode> = {},
+): LevelScanNode {
   return {
     name,
     path: `${parentPath}/${name}`,
-    node_type: "folder",
+    nodeType: "folder",
     size,
     accessible: true,
-    is_link: false,
-    link_target: null,
-    children,
+    isLink: false,
+    linkTarget: null,
     ...opts,
   };
 }
 
-function makeScanResult(root: ScanNode): ScanResult {
+function makeLevel(
+  folderPath: string,
+  directBytesKnown: number,
+  children: LevelScanNode[] = [],
+  opts: Partial<LevelScanResult> = {},
+): LevelScanResult {
   return {
-    root,
-    scanned_at: "2026-01-01T00:00:00",
-    duration_seconds: 1,
-    total_files: 3,
-    total_folders: 1,
-    total_size: root.size,
-    error_count: 0,
+    rootPath: "/root",
+    folderPath,
+    scannedAt: "2026-04-19T00:00:00Z",
+    durationSeconds: 0.01,
+    accessible: true,
+    isLink: false,
+    directFiles: children.filter((c) => c.nodeType === "file").length,
+    directFolders: children.filter((c) => c.nodeType === "folder").length,
+    directBytesKnown,
+    errorCount: 0,
+    children,
+    optionsHash: "abc",
+    ...opts,
   };
 }
 
 beforeEach(() => {
-  useScanStore.setState({ status: "idle", result: null });
+  scanLevel.mockReset();
+  invalidateLevel.mockReset();
+  scanLevel.mockResolvedValue(makeLevel("/mock", 0, []));
+  invalidateLevel.mockResolvedValue(undefined);
+  useScanStore.setState({
+    root: null,
+    selectedPath: "",
+    levels: {},
+    inflight: new Set<string>(),
+    errors: {},
+    status: "idle",
+    result: null,
+  });
   useExplorerStore.setState({ focusedPath: null, showHidden: false });
   Object.defineProperty(navigator, "clipboard", {
     value: { writeText: vi.fn().mockResolvedValue(undefined) },
@@ -84,88 +114,146 @@ beforeEach(() => {
   });
 });
 
+function seed(focusedPath: string, levels: Record<string, LevelScanResult>): void {
+  useScanStore.setState({ root: "/root", selectedPath: focusedPath, levels });
+  useExplorerStore.setState({ focusedPath });
+}
+
 describe("ContentsTable", () => {
   it("shows empty state when focusedPath is null", () => {
     render(<ContentsTable />);
     expect(screen.getByText("explorer.emptyContents")).toBeInTheDocument();
   });
 
-  it("shows empty folder message when focused node has no children", () => {
-    const root: ScanNode = makeFolder("root", 1000, "", []);
-    root.path = "/root";
-    useScanStore.setState({ status: "done", result: makeScanResult(root) });
-    useExplorerStore.setState({ focusedPath: "/root" });
+  it("shows empty folder message when focused level has no children", () => {
+    seed("/root", { "/root": makeLevel("/root", 0, []) });
     render(<ContentsTable />);
     expect(screen.getByText("explorer.contents.emptyFolder")).toBeInTheDocument();
   });
 
   it("renders one row per direct child", () => {
-    const root: ScanNode = makeFolder("root", 1000, "", [
-      makeFolder("src", 600),
-      makeFile("readme.md", 400),
-    ]);
-    root.path = "/root";
-    useScanStore.setState({ status: "done", result: makeScanResult(root) });
-    useExplorerStore.setState({ focusedPath: "/root" });
+    seed("/root", {
+      "/root": makeLevel("/root", 1000, [
+        makeFolder("src", 600),
+        makeFile("readme.md", 400),
+      ]),
+    });
     render(<ContentsTable />);
     expect(screen.getByTestId("contents-row-/root/src")).toBeInTheDocument();
     expect(screen.getByTestId("contents-row-/root/readme.md")).toBeInTheDocument();
   });
 
   it("clicking a folder row calls setFocusedPath", () => {
-    const root: ScanNode = makeFolder("root", 1000, "", [makeFolder("src", 600)]);
-    root.path = "/root";
-    useScanStore.setState({ status: "done", result: makeScanResult(root) });
-    useExplorerStore.setState({ focusedPath: "/root" });
+    seed("/root", {
+      "/root": makeLevel("/root", 600, [makeFolder("src", 600)]),
+    });
     render(<ContentsTable />);
     fireEvent.click(screen.getByTestId("contents-row-/root/src"));
     expect(useExplorerStore.getState().focusedPath).toBe("/root/src");
   });
 
   it("clicking a file row does not change focusedPath", () => {
-    const root: ScanNode = makeFolder("root", 1000, "", [makeFile("readme.md", 400)]);
-    root.path = "/root";
-    useScanStore.setState({ status: "done", result: makeScanResult(root) });
-    useExplorerStore.setState({ focusedPath: "/root" });
+    seed("/root", {
+      "/root": makeLevel("/root", 400, [makeFile("readme.md", 400)]),
+    });
     render(<ContentsTable />);
     fireEvent.click(screen.getByTestId("contents-row-/root/readme.md"));
     expect(useExplorerStore.getState().focusedPath).toBe("/root");
   });
 
   it("symlink rows show link badge", () => {
-    const root: ScanNode = makeFolder("root", 1000, "", [
-      makeFile("linked", 0, "/root", { is_link: true }),
-    ]);
-    root.path = "/root";
-    useScanStore.setState({ status: "done", result: makeScanResult(root) });
-    useExplorerStore.setState({ focusedPath: "/root" });
+    seed("/root", {
+      "/root": makeLevel("/root", 0, [makeFile("linked", 0, "/root", { isLink: true })]),
+    });
     render(<ContentsTable />);
     const row = screen.getByTestId("contents-row-/root/linked");
     expect(row.querySelector("[data-link-badge]")).toBeInTheDocument();
   });
 
   it("inaccessible rows show dash for size and percent", () => {
-    const root: ScanNode = makeFolder("root", 1000, "", [
-      makeFolder("locked", 0, "/root", [], { accessible: false }),
-    ]);
-    root.path = "/root";
-    useScanStore.setState({ status: "done", result: makeScanResult(root) });
-    useExplorerStore.setState({ focusedPath: "/root" });
+    seed("/root", {
+      "/root": makeLevel("/root", 0, [
+        makeFolder("locked", null, "/root", { accessible: false }),
+      ]),
+    });
     render(<ContentsTable />);
     const row = screen.getByTestId("contents-row-/root/locked");
     expect(within(row).getAllByText("—").length).toBeGreaterThanOrEqual(2);
   });
 
+  it("unknown folder size (null) row shows em-dash for size", () => {
+    seed("/root", {
+      "/root": makeLevel("/root", 0, [makeFolder("unscanned", null, "/root")]),
+    });
+    render(<ContentsTable />);
+    const row = screen.getByTestId("contents-row-/root/unscanned");
+    expect(within(row).getAllByText("—").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("percentages use directBytesKnown as the denominator", () => {
+    // Two files: 400 and 100. directBytesKnown = 500.
+    seed("/root", {
+      "/root": makeLevel("/root", 500, [
+        makeFile("big.txt", 400),
+        makeFile("small.txt", 100),
+      ]),
+    });
+    render(<ContentsTable />);
+    // 400/500 = 80%, 100/500 = 20%
+    const bigRow = screen.getByTestId("contents-row-/root/big.txt");
+    const smallRow = screen.getByTestId("contents-row-/root/small.txt");
+    expect(within(bigRow).getByText("80%")).toBeInTheDocument();
+    expect(within(smallRow).getByText("20%")).toBeInTheDocument();
+  });
+
+  describe("lazy loading", () => {
+    it("calls ensureLevel once when focusedPath is set and level is missing", async () => {
+      useScanStore.setState({
+        root: "/root",
+        selectedPath: "/root/lazy",
+        levels: {},
+      });
+      useExplorerStore.setState({ focusedPath: "/root/lazy" });
+      scanLevel.mockResolvedValueOnce(makeLevel("/root/lazy", 0, []));
+      render(<ContentsTable />);
+      await vi.waitFor(() => expect(scanLevel).toHaveBeenCalledTimes(1));
+      expect(scanLevel).toHaveBeenCalledWith(
+        "/root",
+        "/root/lazy",
+        expect.any(Object),
+        false,
+      );
+    });
+
+    it("does not call ensureLevel when the level is already cached", async () => {
+      seed("/root", { "/root": makeLevel("/root", 0, []) });
+      render(<ContentsTable />);
+      await new Promise((r) => setTimeout(r, 0));
+      expect(scanLevel).not.toHaveBeenCalled();
+    });
+
+    it("shows an inflight placeholder while the focused level is loading", () => {
+      useScanStore.setState({
+        root: "/root",
+        selectedPath: "/root/loading",
+        levels: {},
+        inflight: new Set(["/root/loading"]),
+      });
+      useExplorerStore.setState({ focusedPath: "/root/loading" });
+      render(<ContentsTable />);
+      expect(screen.getByTestId("contents-loading")).toBeInTheDocument();
+    });
+  });
+
   describe("sorting", () => {
     function renderWithItems() {
-      const root: ScanNode = makeFolder("root", 1000, "", [
-        makeFile("gamma.txt", 300),
-        makeFile("alpha.txt", 100),
-        makeFile("beta.txt", 200),
-      ]);
-      root.path = "/root";
-      useScanStore.setState({ status: "done", result: makeScanResult(root) });
-      useExplorerStore.setState({ focusedPath: "/root" });
+      seed("/root", {
+        "/root": makeLevel("/root", 600, [
+          makeFile("gamma.txt", 300),
+          makeFile("alpha.txt", 100),
+          makeFile("beta.txt", 200),
+        ]),
+      });
       return render(<ContentsTable />);
     }
 
@@ -208,30 +296,29 @@ describe("ContentsTable", () => {
     });
 
     it("custom sort persists across sibling navigation within session", () => {
-      const root: ScanNode = makeFolder("root", 1000, "", [
-        makeFolder("one", 600, "/root", [
+      seed("/root/one", {
+        "/root": makeLevel("/root", 1000, [
+          makeFolder("one", 600),
+          makeFolder("two", 400),
+        ]),
+        "/root/one": makeLevel("/root/one", 300, [
           makeFile("y.txt", 200, "/root/one"),
           makeFile("x.txt", 100, "/root/one"),
         ]),
-        makeFolder("two", 400, "/root", [
+        "/root/two": makeLevel("/root/two", 350, [
           makeFile("q.txt", 300, "/root/two"),
           makeFile("p.txt", 50, "/root/two"),
         ]),
-      ]);
-      root.path = "/root";
-      useScanStore.setState({ status: "done", result: makeScanResult(root) });
-      useExplorerStore.setState({ focusedPath: "/root/one" });
+      });
       render(<ContentsTable />);
-      // Switch to name-asc
       fireEvent.click(screen.getByRole("button", { name: /name/i }));
       let rows = screen.getAllByTestId(/^contents-row-/);
       expect(rows[0]).toHaveAttribute("data-testid", "contents-row-/root/one/x.txt");
-      // Navigate to sibling folder "two"
       act(() => {
         useExplorerStore.setState({ focusedPath: "/root/two" });
+        useScanStore.setState({ selectedPath: "/root/two" });
       });
       rows = screen.getAllByTestId(/^contents-row-/);
-      // Still name-asc in the new folder
       expect(rows[0]).toHaveAttribute("data-testid", "contents-row-/root/two/p.txt");
     });
 
@@ -249,12 +336,9 @@ describe("ContentsTable", () => {
 
   describe("toolbar order", () => {
     function renderWithItems() {
-      const root: ScanNode = makeFolder("root", 1000, "", [
-        makeFile("alpha.txt", 100),
-      ]);
-      root.path = "/root";
-      useScanStore.setState({ status: "done", result: makeScanResult(root) });
-      useExplorerStore.setState({ focusedPath: "/root" });
+      seed("/root", {
+        "/root": makeLevel("/root", 100, [makeFile("alpha.txt", 100)]),
+      });
       render(<ContentsTable />);
     }
 
@@ -270,10 +354,9 @@ describe("ContentsTable", () => {
 
   describe("context menu", () => {
     function renderWithFile() {
-      const root: ScanNode = makeFolder("root", 1000, "", [makeFile("report.pdf", 500)]);
-      root.path = "/root";
-      useScanStore.setState({ status: "done", result: makeScanResult(root) });
-      useExplorerStore.setState({ focusedPath: "/root" });
+      seed("/root", {
+        "/root": makeLevel("/root", 500, [makeFile("report.pdf", 500)]),
+      });
       render(<ContentsTable />);
     }
 
@@ -299,7 +382,7 @@ describe("ContentsTable", () => {
       expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     });
 
-    it("Copy path menu item calls navigator.clipboard.writeText", async () => {
+    it("Copy path menu item calls navigator.clipboard.writeText", () => {
       renderWithFile();
       fireEvent.contextMenu(screen.getByTestId("contents-row-/root/report.pdf"));
       fireEvent.click(screen.getByRole("menuitem", { name: /copypath/i }));
@@ -332,10 +415,9 @@ describe("ContentsTable", () => {
 
   describe("properties modal", () => {
     it("clicking Properties opens a dialog showing the item path", () => {
-      const root: ScanNode = makeFolder("root", 1000, "", [makeFile("report.pdf", 500)]);
-      root.path = "/root";
-      useScanStore.setState({ status: "done", result: makeScanResult(root) });
-      useExplorerStore.setState({ focusedPath: "/root" });
+      seed("/root", {
+        "/root": makeLevel("/root", 500, [makeFile("report.pdf", 500)]),
+      });
       render(<ContentsTable />);
       fireEvent.contextMenu(screen.getByTestId("contents-row-/root/report.pdf"));
       fireEvent.click(screen.getByRole("menuitem", { name: /properties/i }));
