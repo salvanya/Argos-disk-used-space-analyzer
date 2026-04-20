@@ -245,14 +245,16 @@ Baseline before Phase A: `d0343b4` (M13 closeout). Regression targets: backend p
 ## Phase J — Docs: CLAUDE.md rewrite
 
 ### Green
-- [ ] Rewrite `CLAUDE.md` §2.4 — replace the "Complete scan (not lazy/progressive)" bullet with the lazy model description.
-- [ ] Update §2.2 right column — insights are "direct children of the focused folder" only.
-- [ ] Update §6.6 — "level scans never recurse past direct children" addendum.
-- [ ] Remove M14 from §10 "upcoming milestones" list (if still present) and mark shipped.
-- [ ] Remove the "open question" mention from §11 if present.
+- [x] Rewrite `CLAUDE.md` §2.4 — replace the "Complete scan (not lazy/progressive)" bullet with the lazy model description.
+- [x] Update §2.2 right column — insights are "direct children of the focused folder" only.
+- [x] Update §6.6 — "level scans never recurse past direct children" addendum.
+- [x] Update §2.3 — 3D graph lazy / incremental expansion (not the original "entire scanned tree").
+- [x] Update §6.7 — drop WebSocket progress reference; `/ws/scan` was removed in Phase D.
+- [x] Mark M14 shipped in §10.
+- [x] Remove the "open question" mention from §11 if present — (§11 had no M14 entry; no change).
 
 ### Ship
-- [ ] Commit: `docs(m14): rewrite CLAUDE.md for lazy scanning model`.
+- [x] Commit: `docs(m14): rewrite CLAUDE.md for lazy scanning model`.
 
 ---
 
