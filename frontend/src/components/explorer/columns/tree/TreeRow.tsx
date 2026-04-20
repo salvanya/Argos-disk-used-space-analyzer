@@ -1,4 +1,5 @@
-import { ChevronRight, Folder, Link, Lock } from "lucide-react";
+import { ChevronRight, Folder, Link, Loader2, Lock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "../../../../lib/utils";
 import { formatSize, computePct } from "./treeUtils";
 import type { FlatTreeNode } from "./treeUtils";
@@ -8,13 +9,16 @@ interface TreeRowProps {
   isFocused: boolean;
   onToggle: (path: string) => void;
   onFocus: (path: string) => void;
+  onContextMenu: (e: React.MouseEvent, path: string) => void;
 }
 
-export function TreeRow({ item, isFocused, onToggle, onFocus }: TreeRowProps) {
-  const { node, depth, parentSize, hasChildren, isExpanded } = item;
-  const isLink = node.is_link;
+export function TreeRow({ item, isFocused, onToggle, onFocus, onContextMenu }: TreeRowProps) {
+  const { t } = useTranslation();
+  const { node, depth, parentSize, hasChildren, isExpanded, isInflight } = item;
+  const isLink = node.isLink;
   const isLocked = !node.accessible;
   const canExpand = hasChildren;
+  const sizeUnknown = node.size === null;
 
   return (
     <div
@@ -25,10 +29,11 @@ export function TreeRow({ item, isFocused, onToggle, onFocus }: TreeRowProps) {
         isFocused
           ? "bg-canvas-selected text-fg-primary"
           : "text-fg-secondary hover:bg-canvas-hover hover:text-fg-primary",
-        isLocked && "opacity-40"
+        isLocked && "opacity-40",
       )}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
       onClick={() => onFocus(node.path)}
+      onContextMenu={(e) => onContextMenu(e, node.path)}
     >
       {canExpand ? (
         <button
@@ -47,7 +52,13 @@ export function TreeRow({ item, isFocused, onToggle, onFocus }: TreeRowProps) {
         <span className="w-4 shrink-0" />
       )}
 
-      {isLink ? (
+      {isInflight ? (
+        <Loader2
+          data-spinner
+          size={14}
+          className="shrink-0 animate-spin text-accent-blue"
+        />
+      ) : isLink ? (
         <Link data-icon="link" size={14} className="shrink-0 text-cyan-400/70" />
       ) : isLocked ? (
         <Lock data-icon="lock" size={14} className="shrink-0 text-fg-muted" />
@@ -57,13 +68,17 @@ export function TreeRow({ item, isFocused, onToggle, onFocus }: TreeRowProps) {
 
       <span className="min-w-0 flex-1 truncate font-medium">{node.name}</span>
 
-      <span className="shrink-0 font-mono text-xs text-fg-muted">
+      <span
+        data-size
+        title={sizeUnknown ? t("tree.notYetScanned") : undefined}
+        className="shrink-0 font-mono text-xs text-fg-muted"
+      >
         {formatSize(node.size)}
       </span>
       <span
         className={cn(
           "w-10 shrink-0 text-right font-mono text-xs",
-          isFocused ? "text-fg-secondary" : "text-fg-muted"
+          isFocused ? "text-fg-secondary" : "text-fg-muted",
         )}
       >
         {computePct(node.size, parentSize)}

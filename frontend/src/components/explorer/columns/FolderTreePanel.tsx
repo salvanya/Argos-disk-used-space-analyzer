@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FolderOpen } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -7,15 +7,26 @@ import { useScanStore } from "../../../stores/scanStore";
 import { useExplorerStore } from "../../../stores/explorerStore";
 import { useTreeState } from "./tree/useTreeState";
 import { TreeRow } from "./tree/TreeRow";
+import { TreeContextMenu } from "./tree/TreeContextMenu";
+
+interface ContextMenuState {
+  x: number;
+  y: number;
+  path: string;
+}
 
 export function FolderTreePanel() {
   const { t } = useTranslation();
-  const result = useScanStore((s) => s.result);
+  const root = useScanStore((s) => s.root);
+  const levels = useScanStore((s) => s.levels);
+  const inflight = useScanStore((s) => s.inflight);
   const showHidden = useExplorerStore((s) => s.showHidden);
   const focusedPath = useExplorerStore((s) => s.focusedPath);
   const setFocusedPath = useExplorerStore((s) => s.setFocusedPath);
 
-  const { flatList, toggle } = useTreeState(result?.root ?? null, showHidden);
+  const { flatList, toggle, rescan } = useTreeState(root, levels, inflight, showHidden);
+
+  const [menu, setMenu] = useState<ContextMenuState | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
@@ -26,6 +37,11 @@ export function FolderTreePanel() {
   });
 
   const focusedIdx = flatList.findIndex((it) => it.node.path === focusedPath);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    setMenu({ x: e.clientX, y: e.clientY, path });
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -106,7 +122,7 @@ export function FolderTreePanel() {
         </span>
       </div>
 
-      {!result ? (
+      {!root ? (
         <div className="flex flex-1 items-center justify-center">
           <EmptyState icon={FolderOpen} headline={t("explorer.emptyFolders")} />
         </div>
@@ -144,12 +160,24 @@ export function FolderTreePanel() {
                     isFocused={focusedPath === item.node.path}
                     onToggle={toggle}
                     onFocus={setFocusedPath}
+                    onContextMenu={handleContextMenu}
                   />
                 </div>
               );
             })}
           </div>
         </div>
+      )}
+
+      {menu && (
+        <TreeContextMenu
+          x={menu.x}
+          y={menu.y}
+          onRescan={() => {
+            void rescan(menu.path);
+          }}
+          onClose={() => setMenu(null)}
+        />
       )}
     </div>
   );
