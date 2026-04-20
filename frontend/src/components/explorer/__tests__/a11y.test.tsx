@@ -6,36 +6,31 @@ import { Home } from "../../../pages/Home";
 import { Explorer } from "../../../pages/Explorer";
 import { useScanStore } from "../../../stores/scanStore";
 import { useExplorerStore } from "../../../stores/explorerStore";
-import type { ScanResult } from "../../../lib/types";
+import type { LevelScanResult } from "../../../lib/types";
 
-const RESULT: ScanResult = {
-  root: {
-    name: "root",
-    path: "/root",
-    node_type: "folder",
-    size: 100,
-    accessible: true,
-    is_link: false,
-    link_target: null,
-    children: [
-      {
-        name: "child",
-        path: "/root/child",
-        node_type: "file",
-        size: 50,
-        accessible: true,
-        is_link: false,
-        link_target: null,
-        children: [],
-      },
-    ],
-  },
-  scanned_at: "2026-04-18T00:00:00",
-  duration_seconds: 1,
-  total_files: 1,
-  total_folders: 1,
-  total_size: 100,
-  error_count: 0,
+const ROOT_LEVEL: LevelScanResult = {
+  rootPath: "/root",
+  folderPath: "/root",
+  scannedAt: "2026-04-18T00:00:00",
+  durationSeconds: 0.1,
+  accessible: true,
+  isLink: false,
+  directFiles: 1,
+  directFolders: 0,
+  directBytesKnown: 50,
+  errorCount: 0,
+  optionsHash: "abc",
+  children: [
+    {
+      name: "child",
+      path: "/root/child",
+      nodeType: "file",
+      size: 50,
+      accessible: true,
+      isLink: false,
+      linkTarget: null,
+    },
+  ],
 };
 
 const AXE_CONFIG = {
@@ -47,7 +42,15 @@ const AXE_CONFIG = {
 
 describe("a11y smoke", () => {
   beforeEach(() => {
-    useScanStore.setState({ result: null, status: "idle" });
+    useScanStore.setState({
+      root: null,
+      selectedPath: "",
+      levels: {},
+      inflight: new Set<string>(),
+      errors: {},
+      status: "idle",
+      errorMessage: "",
+    });
     useExplorerStore.setState({ viewMode: "columns", focusedPath: null });
   });
 
@@ -62,7 +65,12 @@ describe("a11y smoke", () => {
   });
 
   it("Explorer columns view has no axe violations", async () => {
-    useScanStore.setState({ result: RESULT, status: "done" });
+    useScanStore.setState({
+      root: "/root",
+      selectedPath: "/root",
+      levels: { "/root": ROOT_LEVEL },
+      status: "done",
+    });
     const { container } = render(
       <MemoryRouter>
         <Explorer />

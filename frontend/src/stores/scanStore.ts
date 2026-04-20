@@ -1,36 +1,25 @@
 import { create } from "zustand";
-import type { LevelScanResult, ScanNode, ScanResult } from "../lib/types";
+import type { LevelScanResult } from "../lib/types";
 import { scanLevel as apiScanLevel, invalidateLevel as apiInvalidateLevel } from "../lib/api";
 import { useSettingsStore } from "./settingsStore";
 
 type ScanStatus = "idle" | "scanning" | "done" | "error";
 
 interface ScanState {
-  // M14 lazy-scan state
   root: string | null;
   selectedPath: string;
   levels: Record<string, LevelScanResult>;
   inflight: Set<string>;
   errors: Record<string, string>;
+  status: ScanStatus;
+  errorMessage: string;
+
   openRoot: (path: string) => Promise<void>;
   ensureLevel: (path: string) => Promise<void>;
   invalidateLevel: (path: string, recursive: boolean) => Promise<void>;
   rescanRoot: () => Promise<void>;
   closeRoot: () => void;
   setSelectedPath: (path: string) => void;
-
-  // Legacy surface kept until components are rewired in Phases F–I.
-  // Setting `result`/`status` via setState still round-trips; removeNode
-  // mutates both levels[parent] and (if present) the legacy tree.
-  status: ScanStatus;
-  nodeCount: number;
-  result: ScanResult | null;
-  errorMessage: string;
-  startScan: () => void;
-  updateProgress: (nodeCount: number) => void;
-  completeScan: (result: ScanResult) => void;
-  failScan: (message: string) => void;
-  reset: () => void;
   removeNode: (path: string) => void;
 }
 
@@ -49,15 +38,6 @@ function isDescendantOf(candidate: string, ancestor: string): boolean {
   return candidate === ancestor || candidate.startsWith(`${ancestor}/`);
 }
 
-function removeNodeFromTree(node: ScanNode, path: string): ScanNode {
-  return {
-    ...node,
-    children: node.children
-      .filter((c) => c.path !== path)
-      .map((c) => removeNodeFromTree(c, path)),
-  };
-}
-
 function currentOptionsPayload(): {
   include_hidden: boolean;
   include_system: boolean;
@@ -68,23 +48,29 @@ function currentOptionsPayload(): {
 }
 
 export const useScanStore = create<ScanState>((set, get) => ({
-  // M14 state
   root: null,
   selectedPath: "",
   levels: {},
   inflight: new Set<string>(),
   errors: {},
+  status: "idle",
+  errorMessage: "",
 
   setSelectedPath: (path) => set({ selectedPath: path }),
 
   openRoot: async (path) => {
-    set({ root: path, selectedPath: path });
-    const options = currentOptionsPayload();
     set((s) => {
       const next = new Set(s.inflight);
       next.add(path);
-      return { inflight: next };
+      return {
+        root: path,
+        selectedPath: path,
+        inflight: next,
+        status: "scanning",
+        errorMessage: "",
+      };
     });
+    const options = currentOptionsPayload();
     try {
       const result = await apiScanLevel(path, path, options, false);
       set((s) => {
@@ -95,6 +81,7 @@ export const useScanStore = create<ScanState>((set, get) => ({
           levels: { ...s.levels, [path]: result },
           inflight: next,
           errors: restErrors,
+          status: "done",
         };
       });
     } catch (err) {
@@ -105,6 +92,8 @@ export const useScanStore = create<ScanState>((set, get) => ({
         return {
           inflight: next,
           errors: { ...s.errors, [path]: message },
+          status: "error",
+          errorMessage: message,
         };
       });
     }
@@ -197,39 +186,22 @@ export const useScanStore = create<ScanState>((set, get) => ({
       levels: {},
       inflight: new Set<string>(),
       errors: {},
-    }),
-
-  // Legacy surface
-  status: "idle",
-  nodeCount: 0,
-  result: null,
-  errorMessage: "",
-  startScan: () => set({ status: "scanning", nodeCount: 0, result: null, errorMessage: "" }),
-  updateProgress: (nodeCount) => set({ nodeCount }),
-  completeScan: (result) => set({ status: "done", result }),
-  failScan: (message) => set({ status: "error", errorMessage: message }),
-  reset: () =>
-    set({
       status: "idle",
-      selectedPath: "",
-      nodeCount: 0,
-      result: null,
       errorMessage: "",
     }),
+
   removeNode: (path) =>
     set((state) => {
       const parent = parentOf(path);
-      const nextLevels = { ...state.levels };
-      if (parent && nextLevels[parent]) {
-        nextLevels[parent] = {
-          ...nextLevels[parent],
-          children: nextLevels[parent].children.filter((c) => c.path !== path),
-        };
-      }
-      const nextResult =
-        state.result !== null
-          ? { ...state.result, root: removeNodeFromTree(state.result.root, path) }
-          : state.result;
-      return { levels: nextLevels, result: nextResult };
+      if (!parent || !state.levels[parent]) return state;
+      return {
+        levels: {
+          ...state.levels,
+          [parent]: {
+            ...state.levels[parent],
+            children: state.levels[parent].children.filter((c) => c.path !== path),
+          },
+        },
+      };
     }),
 }));

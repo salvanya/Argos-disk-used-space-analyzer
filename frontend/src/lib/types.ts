@@ -22,27 +22,6 @@ export interface ScanSummary {
   duration_seconds: number;
 }
 
-export interface ScanNode {
-  name: string;
-  path: string;
-  node_type: "file" | "folder" | "symlink";
-  size: number;
-  accessible: boolean;
-  is_link: boolean;
-  link_target: string | null;
-  children: ScanNode[];
-}
-
-export interface ScanResult {
-  root: ScanNode;
-  scanned_at: string;
-  duration_seconds: number;
-  total_files: number;
-  total_folders: number;
-  total_size: number;
-  error_count: number;
-}
-
 export interface LevelScanNode {
   name: string;
   path: string;

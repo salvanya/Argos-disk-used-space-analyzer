@@ -57,7 +57,6 @@ beforeEach(() => {
     levels: { "C:/test": emptyLevel("C:/test") },
     inflight: new Set<string>(),
     errors: {},
-    result: null,
   });
   document.documentElement.classList.remove("light");
   localStorage.clear();

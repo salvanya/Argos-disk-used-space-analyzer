@@ -9,37 +9,7 @@ import {
   LEFT_DEFAULT,
   RIGHT_DEFAULT,
 } from "../../stores/columnWidthsStore";
-import type { LevelScanResult, ScanResult } from "../../lib/types";
-
-const RESULT: ScanResult = {
-  root: {
-    name: "root",
-    path: "/root",
-    node_type: "folder",
-    size: 100,
-    accessible: true,
-    is_link: false,
-    link_target: null,
-    children: [
-      {
-        name: "a",
-        path: "/root/a",
-        node_type: "file",
-        size: 50,
-        accessible: true,
-        is_link: false,
-        link_target: null,
-        children: [],
-      },
-    ],
-  },
-  scanned_at: "2026-04-18T00:00:00",
-  duration_seconds: 1,
-  total_files: 1,
-  total_folders: 1,
-  total_size: 100,
-  error_count: 0,
-};
+import type { LevelScanResult } from "../../lib/types";
 
 const ROOT_LEVEL: LevelScanResult = {
   rootPath: "/root",
@@ -68,7 +38,6 @@ const ROOT_LEVEL: LevelScanResult = {
 
 beforeEach(() => {
   useScanStore.setState({
-    result: RESULT,
     status: "done",
     root: "/root",
     levels: { "/root": ROOT_LEVEL },

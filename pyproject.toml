@@ -124,6 +124,10 @@ markers = [
 filterwarnings = [
     "error",
     "ignore::DeprecationWarning:websockets.*",
+    # Starlette's TestClient still uses httpx's deprecated `app=` shortcut;
+    # surfaces as a DeprecationWarning from httpx. Safe to ignore until
+    # Starlette adopts the WSGITransport form.
+    "ignore:The 'app' shortcut is now deprecated:DeprecationWarning:httpx.*",
 ]
 
 # ---------------------------------------------------------------------------
