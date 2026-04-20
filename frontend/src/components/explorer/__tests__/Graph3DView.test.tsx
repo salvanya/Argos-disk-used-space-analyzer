@@ -1,74 +1,198 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { Graph3DView } from "../graph3d/Graph3DView";
 import { useScanStore } from "../../../stores/scanStore";
 import { useExplorerStore } from "../../../stores/explorerStore";
 import { nodeRadius } from "../graph3d/graphData";
-import type { ScanResult } from "../../../lib/types";
+import type { LevelScanNode, LevelScanResult } from "../../../lib/types";
 
-function makeResult(nodeCount = 3): ScanResult {
-  const children = [];
-  for (let i = 0; i < nodeCount - 1; i++) {
-    children.push({
-      name: `file${i}`,
-      path: `/root/file${i}`,
-      node_type: "file" as const,
-      size: (i + 1) * 100,
-      accessible: true,
-      is_link: false,
-      link_target: null,
-      children: [],
-    });
-  }
+vi.mock("../../../lib/api", () => ({
+  scanLevel: vi.fn(),
+  invalidateLevel: vi.fn(),
+}));
+
+import { scanLevel } from "../../../lib/api";
+const scanLevelMock = scanLevel as unknown as ReturnType<typeof vi.fn>;
+
+function makeNode(
+  overrides: Partial<LevelScanNode> & { name: string; path: string },
+): LevelScanNode {
   return {
-    root: {
-      name: "root",
-      path: "/root",
-      node_type: "folder",
-      size: 1000,
-      accessible: true,
-      is_link: false,
-      link_target: null,
-      children,
-    },
-    scanned_at: "2026-04-18T00:00:00",
-    duration_seconds: 1,
-    total_files: nodeCount - 1,
-    total_folders: 1,
-    total_size: 1000,
-    error_count: 0,
+    nodeType: "file",
+    size: 100,
+    accessible: true,
+    isLink: false,
+    linkTarget: null,
+    ...overrides,
+  };
+}
+
+function makeLevel(
+  children: LevelScanNode[],
+  folderPath = "/root",
+  rootPath = "/root",
+): LevelScanResult {
+  return {
+    rootPath,
+    folderPath,
+    scannedAt: "2026-04-20T00:00:00",
+    durationSeconds: 0.1,
+    accessible: true,
+    isLink: false,
+    directFiles: children.filter((c) => c.nodeType === "file").length,
+    directFolders: children.filter((c) => c.nodeType === "folder").length,
+    directBytesKnown: children.reduce((s, c) => s + (c.size ?? 0), 0),
+    errorCount: 0,
+    children,
+    optionsHash: "abc",
   };
 }
 
 beforeEach(() => {
-  useScanStore.setState({ result: null, status: "idle" });
+  scanLevelMock.mockReset();
+  useScanStore.setState({
+    root: null,
+    selectedPath: "",
+    levels: {},
+    inflight: new Set<string>(),
+    errors: {},
+    result: null,
+    status: "idle",
+  });
   useExplorerStore.setState({ focusedPath: null, viewMode: "3d" });
 });
 
 describe("Graph3DView", () => {
-  it("renders the mocked force graph with derived nodes when result is present", () => {
-    useScanStore.setState({ result: makeResult(3), status: "done" });
+  it("initial mount renders root + direct children only", () => {
+    const rootLevel = makeLevel([
+      makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null }),
+      makeNode({ name: "b", path: "/root/b", nodeType: "file", size: 100 }),
+    ]);
+    const deepLevel = makeLevel(
+      [makeNode({ name: "deep", path: "/root/a/deep", size: 50 })],
+      "/root/a",
+    );
+    useScanStore.setState({
+      root: "/root",
+      levels: { "/root": rootLevel, "/root/a": deepLevel },
+    });
     render(<Graph3DView />);
-    expect(screen.getByTestId("force-graph-3d")).toBeInTheDocument();
     expect(screen.getByTestId("graph-node-/root")).toBeInTheDocument();
-    expect(screen.getByTestId("graph-node-/root/file0")).toBeInTheDocument();
+    expect(screen.getByTestId("graph-node-/root/a")).toBeInTheDocument();
+    expect(screen.getByTestId("graph-node-/root/b")).toBeInTheDocument();
+    // /root/a is cached but not in the expanded set → its children stay hidden
+    expect(screen.queryByTestId("graph-node-/root/a/deep")).not.toBeInTheDocument();
   });
 
-  it("shows empty state when result is null", () => {
+  it("shows empty state when root is null", () => {
     render(<Graph3DView />);
     expect(screen.queryByTestId("force-graph-3d")).not.toBeInTheDocument();
     expect(screen.getByText("graph3d.emptyState")).toBeInTheDocument();
   });
 
-  it("clicking a node sets explorer focusedPath", () => {
-    useScanStore.setState({ result: makeResult(3), status: "done" });
+  it("clicking a folder sphere calls ensureLevel and appends its children", async () => {
+    const rootLevel = makeLevel([
+      makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null }),
+    ]);
+    useScanStore.setState({ root: "/root", levels: { "/root": rootLevel } });
+    scanLevelMock.mockImplementation(async (_root: string, path: string) => {
+      if (path === "/root/a") {
+        return makeLevel(
+          [makeNode({ name: "deep", path: "/root/a/deep", size: 50 })],
+          "/root/a",
+        );
+      }
+      throw new Error(`unexpected scan for ${path}`);
+    });
+
+    render(<Graph3DView />);
+    expect(screen.queryByTestId("graph-node-/root/a/deep")).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("graph-node-/root/a"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("graph-node-/root/a/deep")).toBeInTheDocument();
+    });
+    expect(scanLevelMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("clicking an already-expanded folder sphere does not refetch", async () => {
+    const rootLevel = makeLevel([
+      makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null }),
+    ]);
+    const aLevel = makeLevel(
+      [makeNode({ name: "deep", path: "/root/a/deep", size: 50 })],
+      "/root/a",
+    );
+    useScanStore.setState({
+      root: "/root",
+      levels: { "/root": rootLevel, "/root/a": aLevel },
+    });
+
+    render(<Graph3DView />);
+    expect(screen.queryByTestId("graph-node-/root/a/deep")).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("graph-node-/root/a"));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId("graph-node-/root/a/deep")).toBeInTheDocument();
+    });
+    const callsAfterFirst = scanLevelMock.mock.calls.length;
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("graph-node-/root/a"));
+    });
+    expect(scanLevelMock.mock.calls.length).toBe(callsAfterFirst);
+  });
+
+  it("expanded folder spheres carry an outer-ring indicator (data-expanded=true)", () => {
+    const rootLevel = makeLevel([
+      makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null }),
+      makeNode({ name: "b", path: "/root/b", nodeType: "file", size: 100 }),
+    ]);
+    useScanStore.setState({ root: "/root", levels: { "/root": rootLevel } });
+    render(<Graph3DView />);
+    // Root is auto-expanded → indicator on
+    expect(screen.getByTestId("graph-node-/root").getAttribute("data-expanded")).toBe("true");
+    // Unclicked folder child → indicator off
+    expect(screen.getByTestId("graph-node-/root/a").getAttribute("data-expanded")).toBe("false");
+    // Files are never expanded
+    expect(screen.getByTestId("graph-node-/root/b").getAttribute("data-expanded")).toBe("false");
+  });
+
+  it("clicking a file sphere sets explorer focusedPath without calling ensureLevel", () => {
+    const rootLevel = makeLevel([
+      makeNode({ name: "file0", path: "/root/file0", nodeType: "file", size: 100 }),
+    ]);
+    useScanStore.setState({ root: "/root", levels: { "/root": rootLevel } });
     render(<Graph3DView />);
     fireEvent.click(screen.getByTestId("graph-node-/root/file0"));
     expect(useExplorerStore.getState().focusedPath).toBe("/root/file0");
+    expect(scanLevelMock).not.toHaveBeenCalled();
+  });
+
+  it("clicking a folder sphere also sets explorer focusedPath", async () => {
+    const rootLevel = makeLevel([
+      makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null }),
+    ]);
+    const aLevel = makeLevel([], "/root/a");
+    useScanStore.setState({
+      root: "/root",
+      levels: { "/root": rootLevel, "/root/a": aLevel },
+    });
+    render(<Graph3DView />);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("graph-node-/root/a"));
+    });
+    expect(useExplorerStore.getState().focusedPath).toBe("/root/a");
   });
 
   it("renders legend with translated keys", () => {
-    useScanStore.setState({ result: makeResult(3), status: "done" });
+    const rootLevel = makeLevel([]);
+    useScanStore.setState({ root: "/root", levels: { "/root": rootLevel } });
     render(<Graph3DView />);
     expect(screen.getByText("graph3d.legend.folder")).toBeInTheDocument();
     expect(screen.getByText("graph3d.legend.file")).toBeInTheDocument();
@@ -76,20 +200,15 @@ describe("Graph3DView", () => {
     expect(screen.getByText("graph3d.legend.inaccessible")).toBeInTheDocument();
   });
 
-  it("does not show downsample notice for small scans", () => {
-    useScanStore.setState({ result: makeResult(3), status: "done" });
-    render(<Graph3DView />);
-    expect(screen.queryByText(/graph3d\.downsampledNotice/)).not.toBeInTheDocument();
-  });
-
   it("passes nodeVal = radius**3 so visual radius is proportional to size (M13 spec §6)", () => {
-    useScanStore.setState({ result: makeResult(3), status: "done" });
+    const rootLevel = makeLevel([
+      makeNode({ name: "file0", path: "/root/file0", nodeType: "file", size: 100 }),
+    ]);
+    useScanStore.setState({ root: "/root", levels: { "/root": rootLevel } });
     render(<Graph3DView />);
-    // react-force-graph-3d treats nodeVal as VOLUME (internal cbrt → radius).
-    // We want the visible radius to equal our log-scaled `nodeRadius(size)`,
-    // so nodeVal must be r**3 so the library recovers r via cube-root.
+    // root's "size" for radius purposes = directBytesKnown = 100
     const rootBtn = screen.getByTestId("graph-node-/root");
-    const expectedRoot = nodeRadius(1000) ** 3;
+    const expectedRoot = nodeRadius(100) ** 3;
     expect(Number(rootBtn.getAttribute("data-nodeval"))).toBeCloseTo(expectedRoot, 2);
 
     const fileBtn = screen.getByTestId("graph-node-/root/file0");

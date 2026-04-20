@@ -9,7 +9,7 @@ import {
   LEFT_DEFAULT,
   RIGHT_DEFAULT,
 } from "../../stores/columnWidthsStore";
-import type { ScanResult } from "../../lib/types";
+import type { LevelScanResult, ScanResult } from "../../lib/types";
 
 const RESULT: ScanResult = {
   root: {
@@ -41,8 +41,41 @@ const RESULT: ScanResult = {
   error_count: 0,
 };
 
+const ROOT_LEVEL: LevelScanResult = {
+  rootPath: "/root",
+  folderPath: "/root",
+  scannedAt: "2026-04-18T00:00:00",
+  durationSeconds: 0.1,
+  accessible: true,
+  isLink: false,
+  directFiles: 1,
+  directFolders: 0,
+  directBytesKnown: 50,
+  errorCount: 0,
+  optionsHash: "abc",
+  children: [
+    {
+      name: "a",
+      path: "/root/a",
+      nodeType: "file",
+      size: 50,
+      accessible: true,
+      isLink: false,
+      linkTarget: null,
+    },
+  ],
+};
+
 beforeEach(() => {
-  useScanStore.setState({ result: RESULT, status: "done" });
+  useScanStore.setState({
+    result: RESULT,
+    status: "done",
+    root: "/root",
+    levels: { "/root": ROOT_LEVEL },
+    selectedPath: "/root",
+    inflight: new Set<string>(),
+    errors: {},
+  });
   useExplorerStore.setState({ viewMode: "columns", focusedPath: null });
   useColumnWidthsStore.setState({ left: LEFT_DEFAULT, right: RIGHT_DEFAULT });
 });

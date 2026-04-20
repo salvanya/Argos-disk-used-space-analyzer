@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { ScanNode } from "../../../lib/types";
+import type { LevelScanNode, LevelScanResult } from "../../../lib/types";
 import {
-  flattenTreeToGraph,
+  flattenLevelsToGraph,
   nodeRadius,
   nodeColor,
   DOWNSAMPLE_THRESHOLD,
@@ -9,80 +9,229 @@ import {
   MAX_RADIUS,
 } from "../graph3d/graphData";
 
-function folder(name: string, size: number, children: ScanNode[] = []): ScanNode {
+function makeNode(overrides: Partial<LevelScanNode> & { name: string; path: string }): LevelScanNode {
   return {
-    name,
-    path: `/${name}`,
-    node_type: "folder",
-    size,
+    nodeType: "file",
+    size: 100,
     accessible: true,
-    is_link: false,
-    link_target: null,
-    children,
-  };
-}
-function file(name: string, size: number): ScanNode {
-  return {
-    name,
-    path: `/${name}`,
-    node_type: "file",
-    size,
-    accessible: true,
-    is_link: false,
-    link_target: null,
-    children: [],
+    isLink: false,
+    linkTarget: null,
+    ...overrides,
   };
 }
 
-function tree3(): ScanNode {
+function makeLevel(
+  overrides: Partial<LevelScanResult> & {
+    rootPath: string;
+    folderPath: string;
+    children: LevelScanNode[];
+  },
+): LevelScanResult {
+  const children = overrides.children;
   return {
-    ...folder("root", 100),
-    path: "/root",
-    children: [
-      { ...folder("a", 50), path: "/root/a", children: [{ ...file("a1", 10), path: "/root/a/a1" }] },
-      { ...file("b", 50), path: "/root/b" },
-    ],
+    scannedAt: "2026-04-20T00:00:00",
+    durationSeconds: 0.1,
+    accessible: true,
+    isLink: false,
+    directFiles: children.filter((c) => c.nodeType === "file").length,
+    directFolders: children.filter((c) => c.nodeType === "folder").length,
+    directBytesKnown: children.reduce((s, c) => s + (c.size ?? 0), 0),
+    errorCount: 0,
+    optionsHash: "abc",
+    ...overrides,
   };
 }
 
-describe("flattenTreeToGraph", () => {
-  it("emits one node per tree node and N-1 links", () => {
-    const { nodes, links, downsampled } = flattenTreeToGraph(tree3());
-    expect(nodes).toHaveLength(4);
-    expect(links).toHaveLength(3);
-    expect(downsampled).toBe(false);
-    const ids = nodes.map((n) => n.id).sort();
-    expect(ids).toEqual(["/root", "/root/a", "/root/a/a1", "/root/b"]);
+describe("flattenLevelsToGraph", () => {
+  it("emits root + direct children when only root is expanded", () => {
+    const rootLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root",
+      children: [
+        makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null }),
+        makeNode({ name: "b", path: "/root/b", nodeType: "file", size: 100 }),
+      ],
+    });
+    const { nodes, links } = flattenLevelsToGraph(
+      "/root",
+      { "/root": rootLevel },
+      new Set(["/root"]),
+    );
+    expect(nodes.map((n) => n.id).sort()).toEqual(["/root", "/root/a", "/root/b"]);
+    expect(links).toHaveLength(2);
+    expect(links).toContainEqual({ source: "/root", target: "/root/a" });
+    expect(links).toContainEqual({ source: "/root", target: "/root/b" });
   });
 
-  it("does not recurse into symlink children", () => {
-    const sym: ScanNode = {
-      ...folder("link", 0),
-      path: "/root/link",
-      is_link: true,
-      link_target: "/elsewhere",
-      children: [file("ghost", 1)],
-    };
-    const root: ScanNode = { ...folder("root", 0), path: "/root", children: [sym] };
-    const { nodes } = flattenTreeToGraph(root);
-    expect(nodes.map((n) => n.id).sort()).toEqual(["/root", "/root/link"]);
+  it("does not recurse into unexpanded folder children (even when cached)", () => {
+    const rootLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root",
+      children: [makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null })],
+    });
+    const aLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root/a",
+      children: [makeNode({ name: "deep", path: "/root/a/deep", nodeType: "file", size: 50 })],
+    });
+    const { nodes } = flattenLevelsToGraph(
+      "/root",
+      { "/root": rootLevel, "/root/a": aLevel },
+      new Set(["/root"]),
+    );
+    expect(nodes.map((n) => n.id).sort()).toEqual(["/root", "/root/a"]);
+  });
+
+  it("appends grand-children when the parent is expanded too", () => {
+    const rootLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root",
+      children: [makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null })],
+    });
+    const aLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root/a",
+      children: [makeNode({ name: "deep", path: "/root/a/deep", nodeType: "file", size: 50 })],
+    });
+    const { nodes, links } = flattenLevelsToGraph(
+      "/root",
+      { "/root": rootLevel, "/root/a": aLevel },
+      new Set(["/root", "/root/a"]),
+    );
+    expect(nodes.map((n) => n.id).sort()).toEqual(["/root", "/root/a", "/root/a/deep"]);
+    expect(links).toContainEqual({ source: "/root/a", target: "/root/a/deep" });
+  });
+
+  it("flags expanded folder nodes with expanded=true", () => {
+    const rootLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root",
+      children: [makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null })],
+    });
+    const aLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root/a",
+      children: [],
+    });
+    const { nodes } = flattenLevelsToGraph(
+      "/root",
+      { "/root": rootLevel, "/root/a": aLevel },
+      new Set(["/root", "/root/a"]),
+    );
+    expect(nodes.find((n) => n.id === "/root")?.expanded).toBe(true);
+    expect(nodes.find((n) => n.id === "/root/a")?.expanded).toBe(true);
+  });
+
+  it("leaf folders absent from expanded set are not marked expanded", () => {
+    const rootLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root",
+      children: [makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null })],
+    });
+    const { nodes } = flattenLevelsToGraph(
+      "/root",
+      { "/root": rootLevel },
+      new Set(["/root"]),
+    );
+    expect(nodes.find((n) => n.id === "/root/a")?.expanded).toBe(false);
+  });
+
+  it("file nodes are never marked expanded", () => {
+    const rootLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root",
+      children: [makeNode({ name: "f", path: "/root/f", nodeType: "file", size: 100 })],
+    });
+    const { nodes } = flattenLevelsToGraph(
+      "/root",
+      { "/root": rootLevel },
+      new Set(["/root", "/root/f"]),
+    );
+    expect(nodes.find((n) => n.id === "/root/f")?.expanded).toBe(false);
+  });
+
+  it("does not recurse into symlink children even when they are expanded", () => {
+    const rootLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root",
+      children: [
+        makeNode({
+          name: "link",
+          path: "/root/link",
+          nodeType: "folder",
+          isLink: true,
+          linkTarget: "/elsewhere",
+          size: null,
+        }),
+      ],
+    });
+    const { nodes } = flattenLevelsToGraph(
+      "/root",
+      { "/root": rootLevel },
+      new Set(["/root", "/root/link"]),
+    );
     expect(nodes.find((n) => n.id === "/root/link")?.kind).toBe("symlink");
   });
 
   it("marks inaccessible nodes", () => {
-    const denied: ScanNode = { ...folder("denied", 0), path: "/root/denied", accessible: false };
-    const root: ScanNode = { ...folder("root", 0), path: "/root", children: [denied] };
-    const { nodes } = flattenTreeToGraph(root);
+    const rootLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root",
+      children: [
+        makeNode({
+          name: "denied",
+          path: "/root/denied",
+          nodeType: "folder",
+          accessible: false,
+          size: null,
+        }),
+      ],
+    });
+    const { nodes } = flattenLevelsToGraph(
+      "/root",
+      { "/root": rootLevel },
+      new Set(["/root"]),
+    );
     expect(nodes.find((n) => n.id === "/root/denied")?.kind).toBe("inaccessible");
   });
 
-  it("downsamples deepest nodes when count exceeds threshold", () => {
-    const leaves: ScanNode[] = [];
+  it("returns an empty graph when the root level is missing", () => {
+    const { nodes, links } = flattenLevelsToGraph("/root", {}, new Set());
+    expect(nodes).toHaveLength(0);
+    expect(links).toHaveLength(0);
+  });
+
+  it("treats null sizes as 0 for radius without crashing", () => {
+    const rootLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root",
+      children: [makeNode({ name: "a", path: "/root/a", nodeType: "folder", size: null })],
+    });
+    const { nodes } = flattenLevelsToGraph(
+      "/root",
+      { "/root": rootLevel },
+      new Set(["/root"]),
+    );
+    const a = nodes.find((n) => n.id === "/root/a");
+    expect(a?.size).toBe(0);
+    expect(a?.radius).toBeGreaterThanOrEqual(MIN_RADIUS);
+  });
+
+  it("downsamples when nodes would exceed the threshold", () => {
+    const many: LevelScanNode[] = [];
     for (let i = 0; i < DOWNSAMPLE_THRESHOLD + 100; i++) {
-      leaves.push({ ...file(`f${i}`, 1), path: `/root/f${i}` });
+      many.push(makeNode({ name: `f${i}`, path: `/root/f${i}`, nodeType: "file", size: 1 }));
     }
-    const root: ScanNode = { ...folder("root", leaves.length), path: "/root", children: leaves };
-    const { nodes, downsampled } = flattenTreeToGraph(root);
+    const rootLevel = makeLevel({
+      rootPath: "/root",
+      folderPath: "/root",
+      children: many,
+    });
+    const { nodes, downsampled } = flattenLevelsToGraph(
+      "/root",
+      { "/root": rootLevel },
+      new Set(["/root"]),
+    );
     expect(downsampled).toBe(true);
     expect(nodes.length).toBeLessThanOrEqual(DOWNSAMPLE_THRESHOLD + 1);
   });
