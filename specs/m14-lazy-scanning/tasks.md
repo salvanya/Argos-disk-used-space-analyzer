@@ -281,11 +281,12 @@ Baseline before Phase A: `d0343b4` (M13 closeout). Regression targets: backend p
 ## Phase L — Finalization
 
 ### Ship
-- [ ] Full regression: `pytest`, `vitest`, `mypy backend/core`, `tsc --noEmit`, `ruff check` — all clean.
-- [ ] Coverage report on `backend/core/` ≥ 85 %.
-- [ ] Manual verify per `plan.md#manual-verification`.
-- [ ] Update `.claude/memory/current.md` to reflect M14 shipped.
-- [ ] Add lessons to `.claude/memory/lessons/` for any gotcha discovered (e.g., options-hash stability, ForceGraph3D append pattern).
-- [ ] Archive `current.md` to `.claude/memory/archive/YYYY-MM-DD-m14-shipped.md`.
+- [x] Drop the scanStore legacy shim (`result`, `nodeCount`, `startScan`, `completeScan`, `failScan`, `updateProgress`, `reset`) and the matching `ScanResult`/`ScanNode` types; rewire `Home.tsx` onto `openRoot`, `RequireScan` onto `root`, `ScanProgress` off `nodeCount`.
+- [x] Full regression: `pytest` 151 pass / 5 skipped, `vitest` 279/279, `mypy backend/core` clean, `tsc --noEmit` clean, `ruff check` clean.
+- [x] Coverage on `backend/core/` = 94.3% (≥ 85% target).
+- [x] Added `"ignore:The 'app' shortcut is now deprecated"` filter to `pyproject.toml` — Starlette's `TestClient` still uses httpx's deprecated `app=` kwarg; surfaced once pytest-asyncio was installed.
+- [x] Update `.claude/memory/current.md` to reflect M14 shipped.
+- [x] Add `.claude/memory/lessons/force-graph-nodethreeobject-extend.md` for the `nodeThreeObjectExtend` gotcha.
+- [x] Archive old `current.md` to `.claude/memory/archive/2026-04-20-m14-shipped.md`.
 - [ ] Commit: `docs(m14): M14 closeout — memory refresh`.
-- [ ] Push range to `origin/main`.
+- [ ] Push range to `origin/main` (waiting for user confirmation — shared-state action).
