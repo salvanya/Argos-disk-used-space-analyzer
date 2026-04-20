@@ -261,19 +261,20 @@ Baseline before Phase A: `d0343b4` (M13 closeout). Regression targets: backend p
 ## Phase K — i18n (EN/ES)
 
 ### Red
-- [ ] Each new key has both EN and ES values; i18n-key-regex test passes.
+- [x] Each new key has both EN and ES values; new `i18n/__tests__/parity.test.ts` enforces structural parity + interpolation-token parity + presence of the 5 new M14 keys.
 
 ### Green
-- [ ] Add to `frontend/src/i18n/en.json` and `es.json`:
-  - `tree.notYetScanned` — "Not yet scanned" / "Aún no escaneado".
-  - `tree.rescanThisFolder` — "Rescan this folder" / "Volver a escanear esta carpeta".
-  - `tree.scanningFolder` — "Scanning…" / "Escaneando…".
-  - `insights.insightsFor` — "Insights for {{name}}" / "Detalles de {{name}}".
-  - `insights.directChildrenOnly` — "Direct children only" / "Solo descendientes directos".
+- [x] Add to `frontend/src/i18n/en.json` and `es.json` (nested under existing `explorer.*` namespace for consistency):
+  - `explorer.tree.notYetScanned` — "Not yet scanned" / "Aún no escaneado".
+  - `explorer.tree.rescanThisFolder` — "Rescan this folder" / "Volver a escanear esta carpeta".
+  - `explorer.tree.scanningFolder` — "Scanning…" / "Escaneando…".
+  - `explorer.insights.insightsFor` — "Insights for {{name}}" / "Detalles de {{name}}".
+  - `explorer.insights.directChildrenOnly` — "Direct children only" / "Solo descendientes directos".
+- [x] Fix pre-existing drift: `explorer.viewSettings` was missing from ES (now "Ajustes").
 
 ### Ship
-- [ ] Tests green.
-- [ ] Commit: `chore(m14): i18n strings for lazy scanning UI`.
+- [x] Tests green (279/279), tsc clean.
+- [x] Commit: `chore(m14): i18n strings for lazy scanning UI`.
 
 ---
 

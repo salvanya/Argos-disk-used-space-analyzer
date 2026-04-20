@@ -60,6 +60,7 @@
     "emptyFolders": "El árbol de carpetas aparecerá aquí tras el análisis.",
     "emptyContents": "Selecciona una carpeta para ver su contenido.",
     "emptyInsights": "Los gráficos y estadísticas aparecerán aquí.",
+    "viewSettings": "Ajustes",
     "a11y": {
       "tree": "Árbol de carpetas",
       "contents": "Contenido de la carpeta",
@@ -80,7 +81,14 @@
       "typeBreakdown": "Por tipo de archivo",
       "category": "Categoría",
       "count": "Cantidad",
-      "other": "Otros"
+      "other": "Otros",
+      "insightsFor": "Detalles de {{name}}",
+      "directChildrenOnly": "Solo descendientes directos"
+    },
+    "tree": {
+      "notYetScanned": "Aún no escaneado",
+      "rescanThisFolder": "Volver a escanear esta carpeta",
+      "scanningFolder": "Escaneando…"
     },
     "contents": {
       "emptyFolder": "Esta carpeta está vacía.",

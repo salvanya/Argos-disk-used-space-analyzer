@@ -81,7 +81,14 @@
       "typeBreakdown": "By file type",
       "category": "Category",
       "count": "Count",
-      "other": "Other"
+      "other": "Other",
+      "insightsFor": "Insights for {{name}}",
+      "directChildrenOnly": "Direct children only"
+    },
+    "tree": {
+      "notYetScanned": "Not yet scanned",
+      "rescanThisFolder": "Rescan this folder",
+      "scanningFolder": "Scanning…"
     },
     "contents": {
       "emptyFolder": "This folder is empty.",
