@@ -227,18 +227,18 @@ Baseline before Phase A: `d0343b4` (M13 closeout). Regression targets: backend p
 ## Phase I — Rescan flows + TopMenuBar rewire
 
 ### Red
-- [ ] `topMenuBar.rescan_invalidates_root_recursive_then_ensures`.
-- [ ] `topMenuBar.rescan_preserves_selectedPath_and_refetches_selected_level`.
+- [x] `topMenuBar.rescan_invalidates_root_recursive_then_ensures`.
+- [x] `topMenuBar.rescan_preserves_selectedPath_and_refetches_selected_level`.
 
 ### Green
-- [ ] Update `TopMenuBar.tsx` rescan button handler.
+- [x] Update `TopMenuBar.tsx` rescan button handler.
 
 ### Refactor
-- [ ] Consolidate rescan logic into a `scanStore.rescanRoot()` action.
+- [x] Consolidate rescan logic into a `scanStore.rescanRoot()` action.
 
 ### Ship
-- [ ] Frontend tests green.
-- [ ] Commit: `feat(m14): top-bar rescan rewired for lazy model`.
+- [x] Frontend tests green.
+- [x] Commit: `feat(m14): top-bar rescan rewired for lazy model` (a8e62bb).
 
 ---
 
