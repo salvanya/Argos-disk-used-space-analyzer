@@ -206,21 +206,21 @@ Baseline before Phase A: `d0343b4` (M13 closeout). Regression targets: backend p
 ## Phase H — Frontend: 3D graph incremental expansion
 
 ### Red
-- [ ] `graph3d.initial_mount_renders_root_plus_direct_children`.
-- [ ] `graph3d.click_folder_sphere_calls_ensureLevel_and_appends_children`.
-- [ ] `graph3d.already_expanded_sphere_does_not_refetch`.
-- [ ] `graph3d.expanded_sphere_has_outer_ring_indicator`.
+- [x] `graph3d.initial_mount_renders_root_plus_direct_children`.
+- [x] `graph3d.click_folder_sphere_calls_ensureLevel_and_appends_children`.
+- [x] `graph3d.already_expanded_sphere_does_not_refetch`.
+- [x] `graph3d.expanded_sphere_has_outer_ring_indicator`.
 
 ### Green
-- [ ] Rewrite `graphData.ts` to derive nodes/edges from the `levels` map via BFS over expanded paths.
-- [ ] Wire click handler to `ensureLevel`; append data without re-mounting ForceGraph3D.
+- [x] Rewrite `graphData.ts` to derive nodes/edges from the `levels` map via BFS over expanded paths.
+- [x] Wire click handler to `ensureLevel`; append data without re-mounting ForceGraph3D.
 
 ### Refactor
-- [ ] Keep force-simulation alpha low on append to avoid visual jitter.
+- [x] Keep force-simulation alpha low on append to avoid visual jitter.
 
 ### Ship
-- [ ] Frontend tests green; manual verify camera stability.
-- [ ] Commit: `feat(m14): 3D graph incremental expansion`.
+- [x] Frontend tests green; manual verify camera stability.
+- [x] Commit: `feat(m14): 3D graph incremental expansion` (5a0fe91).
 
 ---
 
