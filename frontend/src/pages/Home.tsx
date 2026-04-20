@@ -7,14 +7,18 @@ import { Footer } from "../components/layout/Footer";
 import { FolderPicker } from "../components/home/FolderPicker";
 import { RecentScans } from "../components/home/RecentScans";
 import { ScanProgress } from "../components/home/ScanProgress";
-import { listScans } from "../lib/api";
+import { connectScanWs, listScans } from "../lib/api";
 import type { ScanSummary } from "../lib/types";
+import { useAppStore } from "../stores/appStore";
 import { useScanStore } from "../stores/scanStore";
+import { useSettingsStore } from "../stores/settingsStore";
 
 export function Home() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { status, selectedPath, openRoot } = useScanStore();
+  const token = useAppStore((s) => s.token);
+  const { status, selectedPath, startScan, updateProgress, completeScan, failScan } =
+    useScanStore();
   const [recentScans, setRecentScans] = useState<ScanSummary[]>([]);
 
   useEffect(() => {
@@ -23,20 +27,36 @@ export function Home() {
       .catch(() => {});
   }, []);
 
-  async function triggerScan(path: string): Promise<void> {
-    await openRoot(path);
-    if (useScanStore.getState().status === "done") {
-      navigate("/explorer");
-    }
+  function triggerScan(path: string, forceRescan: boolean) {
+    startScan();
+    const { include_hidden, include_system, exclude } = useSettingsStore.getState();
+    const ws = connectScanWs(
+      token,
+      path,
+      forceRescan,
+      (msg) => {
+        if (msg.type === "progress") {
+          updateProgress(msg.node_count);
+        } else if (msg.type === "complete") {
+          completeScan(msg.result);
+          ws.close();
+          navigate("/explorer");
+        } else if (msg.type === "error") {
+          failScan(msg.message);
+        }
+      },
+      () => {},
+      { include_hidden, include_system, exclude },
+    );
   }
 
   function handleScan() {
     if (!selectedPath) return;
-    void triggerScan(selectedPath);
+    triggerScan(selectedPath, false);
   }
 
   function handleOpenRecent(scan: ScanSummary) {
-    void triggerScan(scan.root_path);
+    triggerScan(scan.root_path, false);
   }
 
   const canScan = !!selectedPath && status !== "scanning";

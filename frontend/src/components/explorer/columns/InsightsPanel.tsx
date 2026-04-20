@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { BarChart2, Folder, FileText, Loader2 } from "lucide-react";
+import { BarChart2, Folder, FileText } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { EmptyState } from "../../ui/EmptyState";
-import { useFocusedLevel } from "./hooks/useFocusedLevel";
+import { useExplorerStore } from "../../../stores/explorerStore";
+import { useScanStore } from "../../../stores/scanStore";
+import { getDirectChildren } from "./contents/contentsUtils";
 import { formatSize } from "./tree/treeUtils";
 import {
   getPieData,
@@ -15,32 +17,13 @@ const TOP_N = 10;
 
 export function InsightsPanel() {
   const { t } = useTranslation();
-  const { level, isInflight } = useFocusedLevel();
+  const focusedPath = useExplorerStore((s) => s.focusedPath);
+  const result = useScanStore((s) => s.result);
 
-  if (!level) {
-    return (
-      <div
-        className="glass flex h-full flex-col overflow-hidden"
-        role="complementary"
-        aria-label={t("explorer.a11y.insights")}
-      >
-        <PanelHeader />
-        <div className="flex flex-1 items-center justify-center">
-          {isInflight ? (
-            <div className="flex items-center gap-2 text-fg-muted">
-              <Loader2 size={16} className="animate-spin" aria-hidden />
-              <span className="text-xs">{t("tree.scanningFolder")}</span>
-            </div>
-          ) : (
-            <EmptyState icon={BarChart2} headline={t("explorer.insights.noData")} />
-          )}
-        </div>
-      </div>
-    );
-  }
+  const children =
+    focusedPath && result ? getDirectChildren(result.root, focusedPath) : null;
 
-  const children = level.children;
-  if (children.length === 0) {
+  if (!children || children.length === 0) {
     return (
       <div
         className="glass flex h-full flex-col overflow-hidden"
@@ -57,7 +40,7 @@ export function InsightsPanel() {
 
   const pieSlices = getPieData(children);
   const topItems = getTopN(children, TOP_N);
-  const stats = getSummaryStats(level);
+  const stats = getSummaryStats(children, result!.root);
   const breakdown = getTypeBreakdown(children);
 
   return (
@@ -121,9 +104,7 @@ function StatTile({ label, value, title }: StatTileProps) {
   return (
     <div className="rounded-lg bg-canvas-hover border border-canvas-border px-3 py-2 min-w-0">
       <p className="text-[10px] text-fg-muted uppercase tracking-wider truncate">{label}</p>
-      <p className="text-sm font-semibold text-fg-primary truncate mt-0.5" title={title}>
-        {value}
-      </p>
+      <p className="text-sm font-semibold text-fg-primary truncate mt-0.5" title={title}>{value}</p>
     </div>
   );
 }
@@ -196,14 +177,12 @@ function TopNSection({ items, n }: TopNSectionProps) {
           <li key={node.path} className="group">
             <div className="flex items-center justify-between gap-2 text-xs mb-0.5">
               <span className="flex items-center gap-1.5 min-w-0">
-                {node.nodeType === "folder" ? (
+                {node.node_type === "folder" ? (
                   <Folder size={11} className="shrink-0 text-accent-blue" />
                 ) : (
                   <FileText size={11} className="shrink-0 text-fg-muted" />
                 )}
-                <span className="truncate text-fg-secondary" title={node.path}>
-                  {node.name}
-                </span>
+                <span className="truncate text-fg-secondary" title={node.path}>{node.name}</span>
               </span>
               <span className="shrink-0 text-fg-muted font-mono">{formatSize(node.size)}</span>
             </div>

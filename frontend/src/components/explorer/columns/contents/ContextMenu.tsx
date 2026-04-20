@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import type { LevelScanNode } from "../../../../lib/types";
+import type { ScanNode } from "../../../../lib/types";
 
 interface ContextMenuProps {
   x: number;
   y: number;
-  node: LevelScanNode;
+  node: ScanNode;
   onClose: () => void;
   onCopyPath: () => void;
   onProperties: () => void;

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ScanSummary } from "../../../lib/types";
-import { deleteAllScans, invalidateLevel, listScans } from "../../../lib/api";
+import { deleteAllScans, deleteScan, listScans } from "../../../lib/api";
 import { ConfirmDialog } from "../../ui/ConfirmDialog";
 
 export function CacheSection() {
@@ -23,7 +23,7 @@ export function CacheSection() {
   }, []);
 
   async function onDeleteOne(rootPath: string) {
-    await invalidateLevel(rootPath, rootPath, true);
+    await deleteScan(rootPath);
     await refresh();
   }
 

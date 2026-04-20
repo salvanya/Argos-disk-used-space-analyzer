@@ -1,48 +1,78 @@
 import { describe, it, expect } from "vitest";
 import {
+  getDirectChildren,
   sortItems,
   groupItems,
   getFileCategory,
 } from "../contentsUtils";
-import type { LevelScanNode } from "../../../../../lib/types";
+import type { ScanNode } from "../../../../../lib/types";
 
-function makeFile(
-  name: string,
-  size: number | null,
-  opts: Partial<LevelScanNode> = {},
-): LevelScanNode {
+function makeFile(name: string, size: number, opts: Partial<ScanNode> = {}): ScanNode {
   return {
     name,
     path: `/root/${name}`,
-    nodeType: "file",
+    node_type: "file",
     size,
     accessible: true,
-    isLink: false,
-    linkTarget: null,
+    is_link: false,
+    link_target: null,
+    children: [],
     ...opts,
   };
 }
 
 function makeFolder(
   name: string,
-  size: number | null,
+  size: number,
   path: string,
-  opts: Partial<LevelScanNode> = {},
-): LevelScanNode {
+  children: ScanNode[] = []
+): ScanNode {
   return {
     name,
     path,
-    nodeType: "folder",
+    node_type: "folder",
     size,
     accessible: true,
-    isLink: false,
-    linkTarget: null,
-    ...opts,
+    is_link: false,
+    link_target: null,
+    children,
   };
 }
 
+const root = makeFolder("root", 1000, "/root", [
+  makeFolder("src", 600, "/root/src", [
+    makeFile("index.ts", 100),
+    makeFile("app.ts", 200),
+  ]),
+  makeFolder("docs", 300, "/root/docs", []),
+  makeFile("readme.md", 100),
+]);
+
+describe("getDirectChildren", () => {
+  it("returns children of root node", () => {
+    const children = getDirectChildren(root, "/root");
+    expect(children).not.toBeNull();
+    expect(children!.map((c) => c.name)).toEqual(["src", "docs", "readme.md"]);
+  });
+
+  it("returns children of a nested node by path", () => {
+    const children = getDirectChildren(root, "/root/src");
+    expect(children).not.toBeNull();
+    expect(children!.map((c) => c.name)).toEqual(["index.ts", "app.ts"]);
+  });
+
+  it("returns null when path is not found in tree", () => {
+    expect(getDirectChildren(root, "/nonexistent")).toBeNull();
+  });
+
+  it("returns empty array for a node with no children", () => {
+    const children = getDirectChildren(root, "/root/docs");
+    expect(children).toEqual([]);
+  });
+});
+
 describe("sortItems", () => {
-  const items: LevelScanNode[] = [
+  const items: ScanNode[] = [
     makeFile("gamma.txt", 300),
     makeFile("alpha.txt", 100),
     makeFile("beta.txt", 200),
@@ -68,16 +98,6 @@ describe("sortItems", () => {
     expect(sorted.map((i) => i.size)).toEqual([100, 200, 300]);
   });
 
-  it("treats null sizes as smaller than any known size (desc)", () => {
-    const mixed: LevelScanNode[] = [
-      makeFile("known", 500),
-      makeFile("unknown", null),
-      makeFile("other", 100),
-    ];
-    const sorted = sortItems(mixed, "size", "desc");
-    expect(sorted.map((i) => i.name)).toEqual(["known", "other", "unknown"]);
-  });
-
   it("does not mutate the original array", () => {
     const original = [...items];
     sortItems(items, "size", "desc");
@@ -86,7 +106,7 @@ describe("sortItems", () => {
 });
 
 describe("groupItems", () => {
-  const mixed: LevelScanNode[] = [
+  const mixed: ScanNode[] = [
     makeFile("photo.jpg", 500),
     makeFolder("src", 300, "/root/src"),
     makeFile("archive.zip", 200),
@@ -103,7 +123,7 @@ describe("groupItems", () => {
   it("puts folders first when mode is type", () => {
     const groups = groupItems("type", mixed);
     expect(groups[0].label).toBe("Folders");
-    expect(groups[0].items.every((i) => i.nodeType === "folder")).toBe(true);
+    expect(groups[0].items.every((i) => i.node_type === "folder")).toBe(true);
   });
 
   it("groups files by extension category when mode is type", () => {
@@ -117,7 +137,7 @@ describe("groupItems", () => {
 
   it("each file appears in exactly one group", () => {
     const groups = groupItems("type", mixed);
-    const allFiles = groups.flatMap((g) => g.items).filter((i) => i.nodeType !== "folder");
+    const allFiles = groups.flatMap((g) => g.items).filter((i) => i.node_type !== "folder");
     const fileNames = allFiles.map((f) => f.name);
     expect(fileNames).toContain("photo.jpg");
     expect(fileNames).toContain("archive.zip");

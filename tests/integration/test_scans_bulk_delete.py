@@ -1,4 +1,4 @@
-"""Integration tests for DELETE /api/scans (bulk cache clear) under M14 semantics."""
+"""Integration tests for DELETE /api/scans (bulk cache clear)."""
 
 from __future__ import annotations
 
@@ -11,27 +11,28 @@ import httpx
 import pytest
 from backend.app import create_app
 from backend.core.cache import ScanCache
-from backend.core.models import LevelScanResult, ScanOptions
-from backend.core.scanner import compute_options_hash
+from backend.core.models import NodeType, ScanNode, ScanResult
 from fastapi import FastAPI
 from httpx import ASGITransport
 
 
-def _make_level(root_path: str) -> LevelScanResult:
-    options_hash = compute_options_hash(ScanOptions())
-    return LevelScanResult(
-        root_path=root_path,
-        folder_path=root_path,
-        scanned_at=datetime.now(tz=UTC),
-        duration_seconds=0.01,
+def _make_result(root_path: str) -> ScanResult:
+    root_node = ScanNode(
+        name="root",
+        path=root_path,
+        node_type=NodeType.folder,
+        size=10,
         accessible=True,
         is_link=False,
-        direct_files=0,
-        direct_folders=0,
-        direct_bytes_known=0,
+    )
+    return ScanResult(
+        root=root_node,
+        scanned_at=datetime.now(tz=UTC),
+        duration_seconds=0.1,
+        total_files=0,
+        total_folders=1,
+        total_size=10,
         error_count=0,
-        children=[],
-        options_hash=options_hash,
     )
 
 
@@ -75,8 +76,8 @@ async def test_delete_all_scans_requires_auth(unauthed_client: httpx.AsyncClient
 async def test_delete_all_scans_clears_cache(
     authed_client: httpx.AsyncClient, cache: ScanCache
 ) -> None:
-    cache.put_level(_make_level("C:/one"))
-    cache.put_level(_make_level("C:/two"))
+    cache.put(_make_result("C:/one"))
+    cache.put(_make_result("C:/two"))
     assert len(cache.list_roots()) == 2
 
     resp = await authed_client.delete("/api/scans")
@@ -97,7 +98,7 @@ async def test_delete_all_scans_on_empty_cache_is_204(
 async def test_delete_all_scans_is_idempotent(
     authed_client: httpx.AsyncClient, cache: ScanCache
 ) -> None:
-    cache.put_level(_make_level("C:/one"))
+    cache.put(_make_result("C:/one"))
     await authed_client.delete("/api/scans")
     resp = await authed_client.delete("/api/scans")
     assert resp.status_code == 204

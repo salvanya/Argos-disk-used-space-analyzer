@@ -30,16 +30,13 @@ _INVALID_FILE_ATTRIBUTES: int = 0xFFFFFFFF  # GetFileAttributesW failure sentine
 def get_file_attributes(path: Path) -> int:
     """Return the raw Windows file-attribute bitmask for *path*.
 
-    Returns 0 on non-Windows platforms, for non-existent paths, or on API failure.
-    ``GetFileAttributesW`` returns ``INVALID_FILE_ATTRIBUTES`` (``0xFFFFFFFF``) for
-    missing paths; since ctypes decodes the DWORD return as a signed ``c_int`` by
-    default, that value surfaces as ``-1`` — we accept both forms.
+    Returns 0 on non-Windows platforms or if the call fails.
     """
     if sys.platform != "win32":  # pragma: no cover
         return 0  # pragma: no cover
     attrs: int = ctypes.windll.kernel32.GetFileAttributesW(str(path))
-    if attrs in (_INVALID_FILE_ATTRIBUTES, -1):
-        return 0
+    if attrs == _INVALID_FILE_ATTRIBUTES:  # pragma: no cover
+        return 0  # pragma: no cover
     return attrs
 
 

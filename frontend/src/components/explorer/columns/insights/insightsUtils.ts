@@ -1,4 +1,4 @@
-import type { LevelScanNode, LevelScanResult } from "../../../../lib/types";
+import type { ScanNode } from "../../../../lib/types";
 import { getFileCategory } from "../contents/contentsUtils";
 
 export interface PieSlice {
@@ -8,7 +8,7 @@ export interface PieSlice {
 }
 
 export interface TopNItem {
-  node: LevelScanNode;
+  node: ScanNode;
   pct: number;
 }
 
@@ -16,7 +16,8 @@ export interface SummaryStats {
   totalSize: number;
   fileCount: number;
   folderCount: number;
-  largestFile: LevelScanNode | null;
+  largestFile: ScanNode | null;
+  deepestPath: string | null;
 }
 
 export interface TypeBreakdownRow {
@@ -32,78 +33,87 @@ const PIE_COLORS = [
 ];
 const OTHER_COLOR = "#6b7280";
 
-function sizeOrZero(size: number | null): number {
-  return size ?? 0;
-}
-
-export function getPieData(children: LevelScanNode[], maxSlices = 8): PieSlice[] {
-  const nonZero = children.filter((n) => n.size !== null && n.size > 0);
+export function getPieData(children: ScanNode[], maxSlices = 8): PieSlice[] {
+  const nonZero = children.filter((n) => n.size > 0);
   if (nonZero.length === 0) return [];
 
-  const sorted = [...nonZero].sort((a, b) => sizeOrZero(b.size) - sizeOrZero(a.size));
+  const sorted = [...nonZero].sort((a, b) => b.size - a.size);
 
   if (sorted.length <= maxSlices) {
     return sorted.map((n, i) => ({
       name: n.name,
-      value: sizeOrZero(n.size),
+      value: n.size,
       color: PIE_COLORS[i % PIE_COLORS.length],
     }));
   }
 
   const top = sorted.slice(0, maxSlices);
   const rest = sorted.slice(maxSlices);
-  const otherValue = rest.reduce((sum, n) => sum + sizeOrZero(n.size), 0);
+  const otherValue = rest.reduce((sum, n) => sum + n.size, 0);
 
   const slices: PieSlice[] = top.map((n, i) => ({
     name: n.name,
-    value: sizeOrZero(n.size),
+    value: n.size,
     color: PIE_COLORS[i % PIE_COLORS.length],
   }));
   slices.push({ name: "Other", value: otherValue, color: OTHER_COLOR });
   return slices;
 }
 
-export function getTopN(children: LevelScanNode[], n = 10): TopNItem[] {
+export function getTopN(children: ScanNode[], n = 10): TopNItem[] {
   if (children.length === 0) return [];
-  const total = children.reduce((sum, c) => sum + sizeOrZero(c.size), 0);
-  const sorted = [...children].sort((a, b) => sizeOrZero(b.size) - sizeOrZero(a.size));
+  const total = children.reduce((sum, c) => sum + c.size, 0);
+  const sorted = [...children].sort((a, b) => b.size - a.size);
   return sorted.slice(0, n).map((node) => ({
     node,
-    pct: total > 0 ? sizeOrZero(node.size) / total : 0,
+    pct: total > 0 ? node.size / total : 0,
   }));
 }
 
-export function getSummaryStats(level: LevelScanResult): SummaryStats {
-  const files = level.children.filter((n) => n.nodeType === "file");
-  const largestFile =
-    files.length > 0
-      ? files.reduce<LevelScanNode | null>((best, n) => {
-          if (n.size === null) return best;
-          if (best === null) return n;
-          return n.size > sizeOrZero(best.size) ? n : best;
-        }, null)
-      : null;
+export function getSummaryStats(children: ScanNode[], root: ScanNode): SummaryStats {
+  const files = children.filter((n) => n.node_type === "file");
+  const folders = children.filter((n) => n.node_type === "folder");
+  const totalSize = children.reduce((sum, n) => sum + n.size, 0);
+  const largestFile = files.length > 0
+    ? files.reduce((best, n) => (n.size > best.size ? n : best), files[0])
+    : null;
 
-  return {
-    totalSize: level.directBytesKnown,
-    fileCount: level.directFiles,
-    folderCount: level.directFolders,
-    largestFile,
-  };
+  const deepestPath = findDeepestPath(root);
+  return { totalSize, fileCount: files.length, folderCount: folders.length, largestFile, deepestPath };
 }
 
-export function getTypeBreakdown(children: LevelScanNode[]): TypeBreakdownRow[] {
+function findDeepestPath(root: ScanNode, cap = 10_000): string | null {
+  let deepest: string | null = null;
+  let maxDepth = -1;
+  let visited = 0;
+
+  function dfs(node: ScanNode, depth: number): void {
+    if (visited++ >= cap) return;
+    if (depth > maxDepth) {
+      maxDepth = depth;
+      deepest = node.path;
+    }
+    for (const child of node.children) {
+      dfs(child, depth + 1);
+    }
+  }
+
+  dfs(root, 0);
+  return maxDepth > 0 ? deepest : null;
+}
+
+export function getTypeBreakdown(children: ScanNode[]): TypeBreakdownRow[] {
   if (children.length === 0) return [];
 
-  const totalSize = children.reduce((sum, n) => sum + sizeOrZero(n.size), 0);
+  const totalSize = children.reduce((sum, n) => sum + n.size, 0);
   if (totalSize === 0) return [];
 
   const map = new Map<string, { size: number; count: number }>();
 
   for (const node of children) {
-    const cat = node.nodeType === "folder" ? "Folders" : getFileCategory(node.name);
+    const cat = node.node_type === "folder" ? "Folders" : getFileCategory(node.name);
     const entry = map.get(cat) ?? { size: 0, count: 0 };
-    entry.size += sizeOrZero(node.size);
+    entry.size += node.size;
     entry.count += 1;
     map.set(cat, entry);
   }

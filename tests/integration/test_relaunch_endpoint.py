@@ -49,9 +49,7 @@ async def test_relaunch_requires_token(client: httpx.AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_relaunch_rejects_non_windows(client: httpx.AsyncClient, token: str) -> None:
     with patch("backend.api.system.sys.platform", "linux"):
-        resp = await client.post(
-            "/api/system/relaunch-admin", headers={"X-Argos-Token": token}
-        )
+        resp = await client.post("/api/system/relaunch-admin", headers={"X-Argos-Token": token})
     assert resp.status_code == 501
     assert "platformUnsupported" in resp.json()["detail"]
 
@@ -62,16 +60,12 @@ async def test_relaunch_rejects_non_windows(client: httpx.AsyncClient, token: st
 
 
 @pytest.mark.asyncio
-async def test_relaunch_rejects_when_already_admin(
-    client: httpx.AsyncClient, token: str
-) -> None:
+async def test_relaunch_rejects_when_already_admin(client: httpx.AsyncClient, token: str) -> None:
     with (
         patch("backend.api.system.sys.platform", "win32"),
         patch("backend.api.system.is_admin", return_value=True),
     ):
-        resp = await client.post(
-            "/api/system/relaunch-admin", headers={"X-Argos-Token": token}
-        )
+        resp = await client.post("/api/system/relaunch-admin", headers={"X-Argos-Token": token})
     assert resp.status_code == 409
     assert "alreadyElevated" in resp.json()["detail"]
 
@@ -82,17 +76,13 @@ async def test_relaunch_rejects_when_already_admin(
 
 
 @pytest.mark.asyncio
-async def test_relaunch_success_calls_shell_execute(
-    client: httpx.AsyncClient, token: str
-) -> None:
+async def test_relaunch_success_calls_shell_execute(client: httpx.AsyncClient, token: str) -> None:
     with (
         patch("backend.api.system.sys.platform", "win32"),
         patch("backend.api.system.is_admin", return_value=False),
         patch("backend.api.system._relaunch_as_admin", return_value=42) as stub,
     ):
-        resp = await client.post(
-            "/api/system/relaunch-admin", headers={"X-Argos-Token": token}
-        )
+        resp = await client.post("/api/system/relaunch-admin", headers={"X-Argos-Token": token})
     assert resp.status_code == 202
     stub.assert_called_once()
 
@@ -103,17 +93,13 @@ async def test_relaunch_success_calls_shell_execute(
 
 
 @pytest.mark.asyncio
-async def test_relaunch_surfaces_uac_declined(
-    client: httpx.AsyncClient, token: str
-) -> None:
+async def test_relaunch_surfaces_uac_declined(client: httpx.AsyncClient, token: str) -> None:
     # ShellExecuteW returns <= 32 on failure. 5 = SE_ERR_ACCESSDENIED (UAC declined).
     with (
         patch("backend.api.system.sys.platform", "win32"),
         patch("backend.api.system.is_admin", return_value=False),
         patch("backend.api.system._relaunch_as_admin", return_value=5),
     ):
-        resp = await client.post(
-            "/api/system/relaunch-admin", headers={"X-Argos-Token": token}
-        )
+        resp = await client.post("/api/system/relaunch-admin", headers={"X-Argos-Token": token})
     assert resp.status_code == 403
     assert "uacDeclined" in resp.json()["detail"]

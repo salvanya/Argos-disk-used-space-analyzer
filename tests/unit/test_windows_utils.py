@@ -110,7 +110,9 @@ def test_is_system_file_returns_true_for_system_file(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_open_in_explorer_calls_subprocess_on_windows(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_open_in_explorer_calls_subprocess_on_windows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(sys, "platform", "win32")
     mock_popen: MagicMock = MagicMock()
     with patch("backend.core.windows_utils.subprocess") as mock_sub:
@@ -119,7 +121,9 @@ def test_open_in_explorer_calls_subprocess_on_windows(tmp_path: Path, monkeypatc
     mock_popen.assert_called_once_with(["explorer.exe", f"/select,{tmp_path}"])
 
 
-def test_open_in_explorer_does_nothing_on_non_windows(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_open_in_explorer_does_nothing_on_non_windows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(sys, "platform", "linux")
     with patch("backend.core.windows_utils.subprocess") as mock_sub:
         open_in_explorer(tmp_path)

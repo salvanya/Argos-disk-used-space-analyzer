@@ -1,12 +1,10 @@
-"""SQLite-backed per-folder lazy-scan cache for Argos (M14).
+"""SQLite-backed scan result cache for Argos.
 
-One row per ``(root_path, folder_path, options_hash)`` triple: the user-picked
-root a level belongs to, the folder this level describes, and a hash of the
-:class:`ScanOptions` used so partials computed under different toggles don't
-collide. The table holds the serialised :class:`LevelScanResult` JSON verbatim.
+Scan results are serialised as JSON blobs keyed on the normalised root path.
+One row per unique root path; re-scanning overwrites the previous entry.
 
-The M2 eager-scan schema (``scans`` table) is dropped on init — a one-time
-ephemeral loss, acceptable because the cache is a perf aid and not user data.
+This module uses the stdlib ``sqlite3`` (synchronous).  The async ``aiosqlite``
+upgrade will happen in M2 when the cache is called from inside FastAPI endpoints.
 """
 
 from __future__ import annotations
@@ -17,38 +15,33 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from backend.core.errors import CacheError
-from backend.core.models import LevelScanResult
+from backend.core.models import ScanResult
 
 __all__ = ["ScanCache"]
 
 logger = logging.getLogger(__name__)
 
 _DDL = """
-CREATE TABLE IF NOT EXISTS scan_levels (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    root_path     TEXT    NOT NULL,
-    folder_path   TEXT    NOT NULL,
-    options_hash  TEXT    NOT NULL,
-    scanned_at    TEXT    NOT NULL,
-    result_json   TEXT    NOT NULL
+CREATE TABLE IF NOT EXISTS scans (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    root_path      TEXT    NOT NULL,
+    scanned_at     TEXT    NOT NULL,
+    duration_secs  REAL    NOT NULL,
+    total_files    INTEGER NOT NULL,
+    total_folders  INTEGER NOT NULL,
+    total_size     INTEGER NOT NULL,
+    error_count    INTEGER NOT NULL,
+    tree_json      TEXT    NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_scan_levels_key
-    ON scan_levels(root_path, folder_path, options_hash);
-CREATE INDEX IF NOT EXISTS idx_scan_levels_root
-    ON scan_levels(root_path);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_scans_root ON scans(root_path);
 """
 
 
-def _as_posix(path: str | Path) -> str:
-    """Normalise a path string or Path to a forward-slash absolute string."""
-    return Path(path).as_posix() if isinstance(path, Path) else str(path)
-
-
 class ScanCache:
-    """Persist and retrieve :class:`~backend.core.models.LevelScanResult` objects.
+    """Persist and retrieve :class:`~backend.core.models.ScanResult` objects.
 
     Args:
-        db_path: Path to the SQLite database file. Created on first use.
+        db_path: Path to the SQLite database file.  Created on first use.
     """
 
     def __init__(self, db_path: Path) -> None:
@@ -59,134 +52,87 @@ class ScanCache:
     # Public API
     # ------------------------------------------------------------------
 
-    def get_level(
-        self, root_path: str | Path, folder_path: str | Path, options_hash: str
-    ) -> LevelScanResult | None:
-        """Return the cached level for the given triple, or ``None`` if missing."""
-        root_key = _as_posix(root_path)
-        folder_key = _as_posix(folder_path)
+    def get(self, root_path: Path) -> ScanResult | None:
+        """Return the cached scan for *root_path*, or ``None`` if not found."""
+        key = root_path.as_posix()
         try:
             with self._connect() as conn:
                 row = conn.execute(
-                    "SELECT result_json FROM scan_levels "
-                    "WHERE root_path = ? AND folder_path = ? AND options_hash = ?",
-                    (root_key, folder_key, options_hash),
+                    "SELECT tree_json FROM scans WHERE root_path = ?", (key,)
                 ).fetchone()
         except sqlite3.Error as exc:
-            raise CacheError(
-                f"Failed to read level cache for {folder_key!r} under {root_key!r}: {exc}"
-            ) from exc
+            raise CacheError(f"Failed to read cache for {key!r}: {exc}") from exc
+
         if row is None:
             return None
-        return LevelScanResult.model_validate_json(row[0])
+        return ScanResult.model_validate_json(row[0])
 
-    def put_level(self, result: LevelScanResult) -> None:
-        """Upsert *result* into the cache, keyed on (root_path, folder_path, options_hash)."""
+    def put(self, result: ScanResult) -> None:
+        """Store *result* in the cache, overwriting any previous entry for the same root."""
+        key = result.root.path
         json_blob = result.model_dump_json()
         try:
             with self._connect() as conn:
                 conn.execute(
                     """
-                    INSERT INTO scan_levels
-                        (root_path, folder_path, options_hash, scanned_at, result_json)
-                    VALUES (?, ?, ?, ?, ?)
-                    ON CONFLICT(root_path, folder_path, options_hash) DO UPDATE SET
-                        scanned_at  = excluded.scanned_at,
-                        result_json = excluded.result_json
+                    INSERT INTO scans
+                        (root_path, scanned_at, duration_secs,
+                         total_files, total_folders, total_size, error_count, tree_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(root_path) DO UPDATE SET
+                        scanned_at    = excluded.scanned_at,
+                        duration_secs = excluded.duration_secs,
+                        total_files   = excluded.total_files,
+                        total_folders = excluded.total_folders,
+                        total_size    = excluded.total_size,
+                        error_count   = excluded.error_count,
+                        tree_json     = excluded.tree_json
                     """,
                     (
-                        result.root_path,
-                        result.folder_path,
-                        result.options_hash,
+                        key,
                         result.scanned_at.isoformat(),
+                        result.duration_seconds,
+                        result.total_files,
+                        result.total_folders,
+                        result.total_size,
+                        result.error_count,
                         json_blob,
                     ),
                 )
                 conn.commit()
         except sqlite3.Error as exc:
-            raise CacheError(
-                f"Failed to write level cache for {result.folder_path!r}: {exc}"
-            ) from exc
+            raise CacheError(f"Failed to write cache for {key!r}: {exc}") from exc
 
-    def invalidate_level(
-        self,
-        root_path: str | Path,
-        folder_path: str | Path,
-        *,
-        recursive: bool,
-    ) -> None:
-        """Remove the cached level at *folder_path*.
-
-        When *recursive* is True, all descendants under *folder_path* (across every
-        ``options_hash``) are also removed. Siblings whose names share a prefix
-        (e.g. ``/root/foobar`` when invalidating ``/root/foo``) are NOT matched —
-        the ``LIKE`` pattern requires a trailing slash segment.
-        """
-        root_key = _as_posix(root_path)
-        folder_key = _as_posix(folder_path)
+    def delete(self, root_path: Path) -> None:
+        """Remove the cached scan for *root_path*.  No-op if not present."""
+        key = root_path.as_posix()
         try:
             with self._connect() as conn:
-                if recursive:
-                    conn.execute(
-                        "DELETE FROM scan_levels "
-                        "WHERE root_path = ? "
-                        "  AND (folder_path = ? OR folder_path LIKE ? || '/%')",
-                        (root_key, folder_key, folder_key),
-                    )
-                else:
-                    conn.execute(
-                        "DELETE FROM scan_levels "
-                        "WHERE root_path = ? AND folder_path = ?",
-                        (root_key, folder_key),
-                    )
+                conn.execute("DELETE FROM scans WHERE root_path = ?", (key,))
                 conn.commit()
         except sqlite3.Error as exc:
-            raise CacheError(
-                f"Failed to invalidate level cache for {folder_key!r}: {exc}"
-            ) from exc
+            raise CacheError(f"Failed to delete cache for {key!r}: {exc}") from exc
 
     def clear(self) -> None:
-        """Remove every cached level. Idempotent — no-op on an empty cache."""
+        """Remove every cached scan.  Idempotent — no-op on an empty cache."""
         try:
             with self._connect() as conn:
-                conn.execute("DELETE FROM scan_levels")
+                conn.execute("DELETE FROM scans")
                 conn.commit()
         except sqlite3.Error as exc:
             raise CacheError(f"Failed to clear cache: {exc}") from exc
 
-    def list_roots(self) -> list[tuple[str, datetime, str]]:
-        """Return ``(root_path, scanned_at, options_hash)`` for each cached root.
-
-        A "root" is a row where ``folder_path == root_path`` — the user-picked
-        scan starting point. When a root has been scanned under multiple option
-        sets, only the most recent variant is returned.
-        """
+    def list_roots(self) -> list[tuple[str, datetime]]:
+        """Return ``(root_path, scanned_at)`` pairs for every cached scan."""
         try:
             with self._connect() as conn:
                 rows = conn.execute(
-                    """
-                    WITH ranked AS (
-                        SELECT root_path, scanned_at, options_hash,
-                               ROW_NUMBER() OVER (
-                                   PARTITION BY root_path
-                                   ORDER BY scanned_at DESC
-                               ) AS rn
-                        FROM scan_levels
-                        WHERE folder_path = root_path
-                    )
-                    SELECT root_path, scanned_at, options_hash
-                    FROM ranked
-                    WHERE rn = 1
-                    ORDER BY scanned_at DESC
-                    """
+                    "SELECT root_path, scanned_at FROM scans ORDER BY scanned_at DESC"
                 ).fetchall()
         except sqlite3.Error as exc:
-            raise CacheError(f"Failed to list cached roots: {exc}") from exc
+            raise CacheError(f"Failed to list cached scans: {exc}") from exc
 
-        return [
-            (row[0], datetime.fromisoformat(row[1]).replace(tzinfo=UTC), row[2])
-            for row in rows
-        ]
+        return [(row[0], datetime.fromisoformat(row[1]).replace(tzinfo=UTC)) for row in rows]
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -198,14 +144,6 @@ class ScanCache:
     def _init_db(self) -> None:
         try:
             with self._connect() as conn:
-                # Migrate out the M2 eager-scan schema. Acceptable data loss —
-                # the cache is a perf aid, users just re-scan their root.
-                legacy = conn.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table' AND name='scans'"
-                ).fetchone()
-                if legacy is not None:
-                    conn.execute("DROP TABLE scans")
-                    logger.info("Dropped legacy 'scans' table from %s", self._db_path)
                 conn.executescript(_DDL)
                 conn.commit()
         except sqlite3.Error as exc:

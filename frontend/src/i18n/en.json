@@ -60,7 +60,6 @@
     "emptyFolders": "Folder tree will appear here after scan.",
     "emptyContents": "Select a folder to see its contents.",
     "emptyInsights": "Charts and insights will appear here.",
-    "viewSettings": "Settings",
     "a11y": {
       "tree": "Folder tree",
       "contents": "Folder contents",
@@ -81,14 +80,7 @@
       "typeBreakdown": "By file type",
       "category": "Category",
       "count": "Count",
-      "other": "Other",
-      "insightsFor": "Insights for {{name}}",
-      "directChildrenOnly": "Direct children only"
-    },
-    "tree": {
-      "notYetScanned": "Not yet scanned",
-      "rescanThisFolder": "Rescan this folder",
-      "scanningFolder": "Scanning…"
+      "other": "Other"
     },
     "contents": {
       "emptyFolder": "This folder is empty.",

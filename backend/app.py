@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from backend.api.filesystem import router as filesystem_router
 from backend.api.health import router as health_router
 from backend.api.scan import router as scan_router
+from backend.api.scan import ws_router
 from backend.api.system import _authed as system_authed_router
 from backend.api.system import router as system_router
 from backend.config import Settings
@@ -56,6 +57,7 @@ def create_app() -> FastAPI:
     # API routes
     app.include_router(health_router, prefix="/api")
     app.include_router(scan_router, prefix="/api")
+    app.include_router(ws_router)
     app.include_router(system_router, prefix="/api")
     app.include_router(system_authed_router, prefix="/api")
     app.include_router(filesystem_router, prefix="/api")

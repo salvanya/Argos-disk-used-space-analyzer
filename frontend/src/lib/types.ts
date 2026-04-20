@@ -14,35 +14,35 @@ export interface FolderPickerResponse {
 export interface ScanSummary {
   root_path: string;
   scanned_at: string;
-  options_hash: string;
-  direct_files: number;
-  direct_folders: number;
-  direct_bytes_known: number;
+  total_files: number;
+  total_folders: number;
+  total_size: number;
   error_count: number;
   duration_seconds: number;
 }
 
-export interface LevelScanNode {
+export interface ScanNode {
   name: string;
   path: string;
-  nodeType: "file" | "folder" | "symlink";
-  size: number | null;
+  node_type: "file" | "folder" | "symlink";
+  size: number;
   accessible: boolean;
-  isLink: boolean;
-  linkTarget: string | null;
+  is_link: boolean;
+  link_target: string | null;
+  children: ScanNode[];
 }
 
-export interface LevelScanResult {
-  rootPath: string;
-  folderPath: string;
-  scannedAt: string;
-  durationSeconds: number;
-  accessible: boolean;
-  isLink: boolean;
-  directFiles: number;
-  directFolders: number;
-  directBytesKnown: number;
-  errorCount: number;
-  children: LevelScanNode[];
-  optionsHash: string;
+export interface ScanResult {
+  root: ScanNode;
+  scanned_at: string;
+  duration_seconds: number;
+  total_files: number;
+  total_folders: number;
+  total_size: number;
+  error_count: number;
 }
+
+export type WsMessage =
+  | { type: "progress"; node_count: number }
+  | { type: "complete"; result: ScanResult }
+  | { type: "error"; message: string };

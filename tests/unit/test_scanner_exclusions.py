@@ -54,9 +54,7 @@ def test_exclude_node_modules_glob(tree: Path, scanner: DiskScanner) -> None:
 
 
 def test_exclude_multiple_globs_compose(tree: Path, scanner: DiskScanner) -> None:
-    result = scanner.scan(
-        tree, ScanOptions(exclude=["**/node_modules/**", "**/.cache/**"])
-    )
+    result = scanner.scan(tree, ScanOptions(exclude=["**/node_modules/**", "**/.cache/**"]))
     assert result.total_files == 1  # only y.py survives
     assert result.total_size == 20
 

@@ -181,7 +181,10 @@ async def test_delete_permanent_file_calls_path_unlink(
     f = tmp_path / "f.txt"
     f.write_text("x")
     mock_unlink = MagicMock()
-    with patch.object(Path, "is_dir", return_value=False), patch.object(Path, "unlink", mock_unlink):
+    with (
+        patch.object(Path, "is_dir", return_value=False),
+        patch.object(Path, "unlink", mock_unlink),
+    ):
         resp = await client.request(
             "DELETE",
             "/api/fs/item",
@@ -199,7 +202,10 @@ async def test_delete_permanent_dir_calls_shutil_rmtree(
     d = tmp_path / "subdir"
     d.mkdir()
     mock_shutil = MagicMock()
-    with patch.object(Path, "is_dir", return_value=True), patch("backend.api.filesystem.shutil", mock_shutil):
+    with (
+        patch.object(Path, "is_dir", return_value=True),
+        patch("backend.api.filesystem.shutil", mock_shutil),
+    ):
         resp = await client.request(
             "DELETE",
             "/api/fs/item",

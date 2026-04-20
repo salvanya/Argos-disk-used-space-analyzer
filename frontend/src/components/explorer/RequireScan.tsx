@@ -7,7 +7,7 @@ interface RequireScanProps {
 }
 
 export function RequireScan({ children }: RequireScanProps) {
-  const root = useScanStore((s) => s.root);
-  if (!root) return <Navigate to="/" replace />;
+  const result = useScanStore((s) => s.result);
+  if (!result) return <Navigate to="/" replace />;
   return <>{children}</>;
 }

@@ -13,7 +13,7 @@ import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
-from send2trash import send2trash
+from send2trash import send2trash  # type: ignore[import-untyped]
 from starlette.responses import Response
 
 from backend.api.dependencies import verify_token

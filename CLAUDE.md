@@ -59,29 +59,26 @@
      - Properties / Details
 
 3. **Right Column — Insights Panel**
-   - All insights are scoped to the **direct children of the focused folder only** — we never recurse past one level per the lazy scan model (§2.4).
-   - Pie chart: breakdown of the focused folder by its direct children (files + folders).
-   - Top N heaviest direct children (mix of files and folders) with visual bars.
-   - Summary stats for the focused folder: `directBytesKnown` (sum of file children), direct file count, direct folder count, largest direct child.
-   - File type breakdown over the direct children (by extension/category).
+   - Pie chart: breakdown of current folder by direct children (files + folders).
+   - Top N heaviest items (mix of files and folders) with visual bars.
+   - Summary stats: total size, file count, folder count, largest file, deepest path.
+   - File type breakdown (by extension/category).
 
 ### 2.3 3D Graph View Mode
-- Obsidian-style force-directed 3D graph, **incrementally expanded** one level at a time per the lazy scan model (§2.4).
-- Initial mount shows the root plus its direct children only. Clicking a folder sphere calls `ensureLevel` and appends that folder's direct children without re-mounting the graph.
-- Already-expanded folders render an outer ring indicator and do not refetch when clicked a second time.
-- Spheres = nodes (folders and files). Folder `size` may be `null` when its level has not been scanned yet — the radius falls back to the minimum.
+- Obsidian-style force-directed 3D graph of the entire scanned tree.
+- Spheres = nodes (folders and files).
 - Sphere **radius proportional to size** (use log scale to keep tiny items visible).
-- Distinct color per node kind: folders, files, symlinks, inaccessible.
-- Edges connect each parent to the children of the levels that have been expanded so far.
+- Distinct color per node type: folders vs files (and optionally per file category).
+- Edges connect parents to children recursively — full hierarchy visible.
 - Interactive: pan, zoom, rotate, click a sphere to focus/inspect, hover for tooltip (name, size, %).
-- Smooth transitions and low-alpha physics re-warm on append to avoid jitter.
+- Smooth transitions and physics-based motion.
 
 ### 2.4 Non-Functional Requirements
-- **Lazy on-demand scan** — one folder's direct children per scan, never recursive. Opening a root yields only the root level; expanding a folder in the tree, switching focus in the middle column, or clicking a folder sphere in 3D triggers `POST /api/scan/level` for that folder. A per-folder spinner replaces the old global progress indicator.
-- **Per-folder cached levels** in SQLite (`scan_levels` table, keyed on `(root_path, folder_path, options_hash)`) so re-opening a folder is instant; the top-bar "Rescan" button invalidates the root recursively and re-ensures root + currently selected level.
+- **Complete scan** (not lazy/progressive) — show progress indicator during scan.
+- **Cached scans** in SQLite so re-opening a folder is fast; provide "rescan" to force refresh.
 - **Bilingual UI** (ES/EN) from day one.
-- **Inaccessible folders** marked clearly, never crash the scan — the level simply returns `accessible: false` with an empty `children` array.
-- **Symlinks/junctions** shown with distinct icon (🔗), NOT followed, NOT recursed into; they appear as child stubs in their parent level.
+- **Inaccessible folders** marked clearly, never crash the scan.
+- **Symlinks/junctions** shown with distinct icon (🔗), NOT followed, NOT counted in parent totals.
 
 ---
 
@@ -268,18 +265,17 @@ A dark-first, precise, calm, luxurious interface. Light mode must also feel prem
 - Use `cn()` helper for conditional class names.
 
 ### 6.6 Filesystem Scanning Rules
-- **Level scans never recurse past direct children.** `DiskScanner.scan_level(path, options)` returns a single `LevelScanResult` containing that folder's direct entries only — grand-children are fetched by subsequent `scan_level` calls keyed by their own path. Folder children carry `size=None` until their own level is scanned.
-- **Symlinks/junctions: never follow.** Detect via `path.is_symlink()` and `os.path.ismount()`. Mark in the data model; display with 🔗 icon; exclude from size totals. Symlinks appear as leaf stubs — a `scan_level` call whose target is a symlink must not recurse.
-- **Inaccessible folders: never crash.** Catch `PermissionError`, `OSError` — return `accessible=False` with `children=[]` (or mark the individual child as `accessible=False` and bump `error_count`); display size as "—"; log (do not show stack trace to user).
-- **Hidden/system files**: controlled by user setting. Default: excluded. On Windows, check `FILE_ATTRIBUTE_HIDDEN` and `FILE_ATTRIBUTE_SYSTEM` via `ctypes` or `pywin32`. The settings participate in the per-level cache key via `options_hash`.
+- **Symlinks/junctions: never follow.** Detect via `path.is_symlink()` and `os.path.ismount()`. Mark in the data model; display with 🔗 icon; exclude from size totals.
+- **Inaccessible folders: never crash.** Catch `PermissionError`, `OSError` — mark the node as `accessible=False`; display size as "—"; log (do not show stack trace to user).
+- **Hidden/system files**: controlled by user setting. Default: excluded. On Windows, check `FILE_ATTRIBUTE_HIDDEN` and `FILE_ATTRIBUTE_SYSTEM` via `ctypes` or `pywin32`.
 - **Admin privileges**: detect on startup using `ctypes.windll.shell32.IsUserAnAdmin()`. Store in app state. Expose via API. UI shows a shield icon when elevated. Offer "Relaunch as administrator" button using `ShellExecuteW` with `runas` verb.
-- **Deletion**: always via `send2trash` by default. Permanent delete (`os.remove` / `shutil.rmtree`) only with explicit confirmation + shift-click. Log every deletion. After deletion, the frontend splices the child out of its parent level — no recursive re-scan required.
+- **Deletion**: always via `send2trash` by default. Permanent delete (`os.remove` / `shutil.rmtree`) only with explicit confirmation + shift-click. Log every deletion.
 
 ### 6.7 Performance Targets
-- A single `scan_level` call on a typical folder (≤ a few hundred direct entries) should return in well under 100 ms on a modern NVMe.
-- UI stays responsive because scans run per-folder via plain HTTP (`POST /api/scan/level`); the old `/ws/scan` streaming channel was removed in M14 and must not be reintroduced.
+- Scan should process ≥ 100k files per minute on a modern NVMe (benchmark during dev).
+- UI should remain responsive during scan via WebSocket progress updates.
 - Tree rendering: virtualized if > 500 visible nodes (use `@tanstack/react-virtual`).
-- 3D graph: if the expanded-subset exceeds the downsample threshold, aggregate remaining children into an `aggregatedCount` bucket rather than collapsing.
+- 3D graph: if > 5000 nodes, downsample or collapse deepest levels with a "expand" affordance.
 
 ### 6.8 Security / Safety
 - The app binds to `127.0.0.1` ONLY, never `0.0.0.0`. Non-negotiable.
@@ -372,7 +368,7 @@ Project-specific and imported skills. See each skill's `SKILL.md` for details.
 12. **M11 — Polish**: animations, empty states, error states, accessibility pass.
 13. **M12 — Admin relaunch flow** and advanced settings.
 14. **M13 — UX refinements**: resizable columns, default size-desc sort, toolbar reorder, dark-mode group-by dropdown fix, footer with attribution + MIT license, 3D sphere radius proportional to size. Spec at `specs/m13-ux-refinements/spec.md`.
-15. **M14 — Lazy / on-demand scanning** _(shipped)_: per-folder scans on expand instead of full-tree eager walk. Spec at `specs/m14-lazy-scanning/spec.md`.
+15. **M14 — Lazy / on-demand scanning** _(rolled back 2026-04-20)_: lazy per-folder scans shipped but caused poor UX (folder sizes appearing as "—" until each level was expanded). Rolled back to the recursive-scan + WebSocket-progress model described in §2 and §6. UX/UI polish from M14 (resizable columns, sort/group controls, 3D sphere scaling, etc.) is preserved. Spec preserved at `specs/m14-lazy-scanning/spec.md` for future reference; do not re-introduce without a clear UX plan for partial-size states.
 
 ---
 

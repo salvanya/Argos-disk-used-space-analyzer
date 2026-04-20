@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import type { LevelScanNode } from "../../../../lib/types";
+import type { ScanNode } from "../../../../lib/types";
 import { formatSize } from "../tree/treeUtils";
 
 interface PropertiesModalProps {
-  node: LevelScanNode;
+  node: ScanNode;
   onClose: () => void;
 }
 
@@ -12,21 +12,16 @@ export function PropertiesModal({ node, onClose }: PropertiesModalProps) {
 
   const rows: [string, string][] = [
     [t("explorer.contents.propPath"), node.path],
-    [
-      t("explorer.contents.propSize"),
-      node.accessible ? formatSize(node.size) : "—",
-    ],
-    [t("explorer.contents.propType"), node.nodeType],
+    [t("explorer.contents.propSize"), node.accessible ? formatSize(node.size) : "—"],
+    [t("explorer.contents.propType"), node.node_type],
     [t("explorer.contents.propAccessible"), node.accessible ? "Yes" : "No"],
-    [t("explorer.contents.propIsLink"), node.isLink ? "Yes" : "No"],
+    [t("explorer.contents.propIsLink"), node.is_link ? "Yes" : "No"],
   ];
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
         role="dialog"

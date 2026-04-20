@@ -15,6 +15,8 @@ import {
 import { useAppStore } from "../../stores/appStore";
 import { useExplorerStore } from "../../stores/explorerStore";
 import { useScanStore } from "../../stores/scanStore";
+import { useSettingsStore } from "../../stores/settingsStore";
+import { connectScanWs } from "../../lib/api";
 import { AdminBadge } from "./AdminBadge";
 import { RelaunchAdminButton } from "./RelaunchAdminButton";
 
@@ -61,7 +63,8 @@ export function TopMenuBar() {
   const { theme, locale, setTheme, setLocale } = useAppStore();
   const { viewMode, showHidden, setViewMode, toggleHidden, setSettingsOpen } =
     useExplorerStore();
-  const { status, rescanRoot } = useScanStore();
+  const { status, selectedPath, startScan, updateProgress, completeScan, failScan } =
+    useScanStore();
 
   const isScanning = status === "scanning";
 
@@ -79,8 +82,22 @@ export function TopMenuBar() {
     void i18n.changeLanguage(next);
   }
 
-  async function handleRescan(): Promise<void> {
-    await rescanRoot();
+  function handleRescan() {
+    if (!selectedPath || isScanning) return;
+    startScan();
+    const { include_hidden, include_system, exclude } = useSettingsStore.getState();
+    const ws = connectScanWs(
+      useAppStore.getState().token,
+      selectedPath,
+      true,
+      (msg) => {
+        if (msg.type === "progress") updateProgress(msg.node_count);
+        else if (msg.type === "complete") { completeScan(msg.result); ws.close(); }
+        else if (msg.type === "error") failScan(msg.message);
+      },
+      () => {},
+      { include_hidden, include_system, exclude },
+    );
   }
 
   return (
@@ -98,9 +115,7 @@ export function TopMenuBar() {
       {/* Scan controls */}
       <MenuButton
         label={t("explorer.rescan")}
-        onClick={() => {
-          void handleRescan();
-        }}
+        onClick={handleRescan}
         disabled={isScanning}
       >
         <RefreshCw size={14} className={isScanning ? "animate-spin" : ""} />

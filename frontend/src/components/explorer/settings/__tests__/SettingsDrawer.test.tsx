@@ -8,7 +8,7 @@ import { useSettingsStore } from "../../../../stores/settingsStore";
 
 vi.mock("../../../../lib/api", () => ({
   listScans: vi.fn().mockResolvedValue([]),
-  invalidateLevel: vi.fn(),
+  deleteScan: vi.fn(),
   deleteAllScans: vi.fn(),
 }));
 

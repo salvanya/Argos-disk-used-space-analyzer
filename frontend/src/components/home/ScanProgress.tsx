@@ -5,7 +5,7 @@ import { useScanStore } from "../../stores/scanStore";
 
 export function ScanProgress() {
   const { t } = useTranslation();
-  const { status, errorMessage } = useScanStore();
+  const { status, nodeCount, errorMessage } = useScanStore();
 
   if (status === "idle") return null;
 
@@ -22,7 +22,9 @@ export function ScanProgress() {
         {status === "scanning" && (
           <>
             <span className="h-2 w-2 animate-pulse rounded-full bg-accent-blue" />
-            <span className="text-fg-secondary">{t("home.scanning")}</span>
+            <span className="text-fg-secondary">
+              {t("home.itemsFound", { count: nodeCount })}
+            </span>
           </>
         )}
 

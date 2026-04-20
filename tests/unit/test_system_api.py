@@ -103,12 +103,8 @@ async def test_folder_picker_requires_token(client: httpx.AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_folder_picker_returns_selected_path(
-    client: httpx.AsyncClient, token: str
-) -> None:
-    with patch(
-        "backend.api.system._open_folder_dialog", return_value="C:/Users/test"
-    ):
+async def test_folder_picker_returns_selected_path(client: httpx.AsyncClient, token: str) -> None:
+    with patch("backend.api.system._open_folder_dialog", return_value="C:/Users/test"):
         resp = await client.get("/api/folder-picker", headers={"X-Argos-Token": token})
     assert resp.status_code == 200
     body = resp.json()
@@ -116,9 +112,7 @@ async def test_folder_picker_returns_selected_path(
 
 
 @pytest.mark.asyncio
-async def test_folder_picker_returns_null_on_cancel(
-    client: httpx.AsyncClient, token: str
-) -> None:
+async def test_folder_picker_returns_null_on_cancel(client: httpx.AsyncClient, token: str) -> None:
     with patch("backend.api.system._open_folder_dialog", return_value=None):
         resp = await client.get("/api/folder-picker", headers={"X-Argos-Token": token})
     assert resp.status_code == 200

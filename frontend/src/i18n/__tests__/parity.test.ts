@@ -54,28 +54,4 @@ describe("i18n parity (EN ↔ ES)", () => {
     }
     expect(mismatches).toEqual([]);
   });
-
-  describe("M14 lazy-scanning strings", () => {
-    const required = [
-      "explorer.tree.notYetScanned",
-      "explorer.tree.rescanThisFolder",
-      "explorer.tree.scanningFolder",
-      "explorer.insights.insightsFor",
-      "explorer.insights.directChildrenOnly",
-    ];
-
-    it.each(required)("key %s exists in both EN and ES with non-empty values", (key) => {
-      const enStr = findByPath(en as JsonValue, key);
-      const esStr = findByPath(es as JsonValue, key);
-      expect(enStr, `EN missing ${key}`).toBeTruthy();
-      expect(esStr, `ES missing ${key}`).toBeTruthy();
-    });
-
-    it("insightsFor interpolation token survives in both locales", () => {
-      const enStr = findByPath(en as JsonValue, "explorer.insights.insightsFor") ?? "";
-      const esStr = findByPath(es as JsonValue, "explorer.insights.insightsFor") ?? "";
-      expect(enStr).toMatch(/\{\{\s*name\s*\}\}/);
-      expect(esStr).toMatch(/\{\{\s*name\s*\}\}/);
-    });
-  });
 });

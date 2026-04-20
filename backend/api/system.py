@@ -81,9 +81,7 @@ def _relaunch_as_admin() -> int:
 
     params = " ".join(f'"{arg}"' for arg in sys.argv)
     # ShellExecuteW(hwnd, verb, file, params, dir, show) — show=1 SW_SHOWNORMAL
-    return int(
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, None, 1)
-    )
+    return int(ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, None, 1))
 
 
 def _shutdown_after(delay_seconds: float, app: Any) -> None:
