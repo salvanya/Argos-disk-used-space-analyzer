@@ -18,10 +18,13 @@ export function Header() {
 
   return (
     <header className="flex items-center justify-between px-6 py-4">
-      <div className="flex items-center gap-2">
-        <span className="text-lg font-semibold tracking-tight text-fg-primary">
-          {t("app.name")}
-        </span>
+      <div className="flex items-center gap-3">
+        <img
+          src="/logo.svg"
+          alt={t("app.name")}
+          className="h-12 w-auto select-none"
+          draggable={false}
+        />
         <span className="text-xs text-fg-muted">{t("app.tagline")}</span>
       </div>
 
