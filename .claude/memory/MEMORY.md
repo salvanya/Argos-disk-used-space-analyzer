@@ -25,3 +25,4 @@
 - [i18n interpolation in tests](lessons/i18n-key-interpolation-tests.md) — t() returns key verbatim in tests; render dynamic values outside t() as separate JSX
 - [backend venv required](lessons/backend-venv-required.md) — Run pytest via `.venv/Scripts/python.exe`; system Python lacks pytest-asyncio → `Unknown config option: asyncio_mode`
 - [webgl libs jsdom](lessons/webgl-libs-jsdom.md) — Mock react-force-graph-3d + stub ResizeObserver in test-setup; jsdom has no WebGL or ResizeObserver
+- [tsx string attr escape](lessons/tsx-string-attr-escape.md) — JSX quoted attrs don't honor JS escapes; use `{"..."}` expression form for backslashes/paths
