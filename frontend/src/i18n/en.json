@@ -88,6 +88,8 @@
       "colSize": "Size",
       "noGrouping": "No grouping",
       "groupByType": "Group by type",
+      "goUp": "Go to parent folder",
+      "breadcrumbsAria": "Folder path",
       "copyPath": "Copy path",
       "pathCopied": "Path copied!",
       "properties": "Properties",

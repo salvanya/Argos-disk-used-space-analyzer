@@ -88,6 +88,8 @@
       "colSize": "Tamaño",
       "noGrouping": "Sin agrupación",
       "groupByType": "Agrupar por tipo",
+      "goUp": "Ir a la carpeta superior",
+      "breadcrumbsAria": "Ruta de carpetas",
       "copyPath": "Copiar ruta",
       "pathCopied": "¡Ruta copiada!",
       "properties": "Propiedades",
